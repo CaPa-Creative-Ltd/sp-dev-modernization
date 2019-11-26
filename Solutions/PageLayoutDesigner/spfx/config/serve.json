@@ -1,0 +1,31 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/core-build/serve.schema.json",
+  "port": 4321,
+  "https": true,
+  "serveConfigurations": {
+    "default": {
+      "pageUrl": "https://capadevtest.sharepoint.com/sites/WebPartBakery/Transform",
+      "customActions": {
+        "8b8fb04b-a7d9-4824-8af1-10119d6b1e29": {
+          "location": "ClientSideExtension.ListViewCommandSet.CommandBar",
+          "properties": {
+            "sampleTextOne": "One item is selected in the list",
+            "sampleTextTwo": "This command is always visible."
+          }
+        }
+      }
+    },
+    "pageLayoutDesigner": {
+      "pageUrl": "https://capadevtest.sharepoint.com/sites/WebPartBakery/Transform",
+      "customActions": {
+        "8b8fb04b-a7d9-4824-8af1-10119d6b1e29": {
+          "location": "ClientSideExtension.ListViewCommandSet.CommandBar",
+          "properties": {
+            "sampleTextOne": "One item is selected in the list",
+            "sampleTextTwo": "This command is always visible."
+          }
+        }
+      }
+    }
+  }
+}
