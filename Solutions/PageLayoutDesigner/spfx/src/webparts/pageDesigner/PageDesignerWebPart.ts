@@ -8,8 +8,8 @@ import {
 } from '@microsoft/sp-webpart-base';
 
 import * as strings from 'PageDesignerWebPartStrings';
-import PageDesigner from './components/PageDesigner';
-import { IPageDesignerProps } from './components/IPageDesignerProps';
+import PageDesigner from '../../components/pageDesigner/PageDesigner';
+import { IPageDesignerProps } from '../../components/pageDesigner/IPageDesignerProps';
 
 export interface IPageDesignerWebPartProps {
   description: string;
