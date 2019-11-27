@@ -1,9 +1,0 @@
-{
-  "id": "8341b7fb-0d0b-4df0-835c-9b73ea49cc2c",
-  "alias": "TransformLibrary",
-  "componentType": "Library",
-
-  // The "*" signifies that the version should be taken from the package.json
-  "version": "*",
-  "manifestVersion": 2
-}

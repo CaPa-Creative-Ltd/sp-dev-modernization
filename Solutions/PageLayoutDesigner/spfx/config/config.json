@@ -2,14 +2,6 @@
   "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/config.2.0.schema.json",
   "version": "2.0",
   "bundles": {
-    "transform-library": {
-      "components": [
-        {
-          "entrypoint": "./lib/libraries/transform/TransformLibrary.js",
-          "manifest": "./src/libraries/transform/TransformLibrary.manifest.json"
-        }
-      ]
-    },
     "page-layout-designer-command-set": {
       "components": [
         {
@@ -17,11 +9,19 @@
           "manifest": "./src/extensions/pageLayoutDesigner/PageLayoutDesignerCommandSet.manifest.json"
         }
       ]
+    },
+    "page-designer-web-part": {
+      "components": [
+        {
+          "entrypoint": "./lib/webparts/pageDesigner/PageDesignerWebPart.js",
+          "manifest": "./src/webparts/pageDesigner/PageDesignerWebPart.manifest.json"
+        }
+      ]
     }
   },
   "externals": {},
   "localizedResources": {
-    "TransformLibraryStrings": "lib/libraries/transform/loc/{locale}.js",
-    "PageLayoutDesignerCommandSetStrings": "lib/extensions/pageLayoutDesigner/loc/{locale}.js"
+    "PageLayoutDesignerCommandSetStrings": "lib/extensions/pageLayoutDesigner/loc/{locale}.js",
+    "PageDesignerWebPartStrings": "lib/webparts/pageDesigner/loc/{locale}.js"
   }
 }
