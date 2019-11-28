@@ -25,6 +25,6 @@
     "PageDesignerWebPartStrings": "lib/webparts/pageDesigner/loc/{locale}.js",
     "PageDesignerComponentStrings": "lib/components/pageDesigner/loc/{locale}.js",
     "DynamicNavigatorComponentStrings": "lib/components/dynamicNavigator/loc/{locale}.js",
-
+    "VisualDesignerComponentStrings": "lib/components/visualDesigner/loc/{locale}.js"
   }
 }
