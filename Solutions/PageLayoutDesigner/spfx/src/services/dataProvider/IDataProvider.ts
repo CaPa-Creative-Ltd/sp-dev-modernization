@@ -1,0 +1,4 @@
+/*
+  Interface for data providers
+
+*/
