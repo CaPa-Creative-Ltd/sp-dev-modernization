@@ -3,6 +3,11 @@ import styles from './PageDesigner.module.scss';
 import { IPageDesignerProps } from './IPageDesignerProps';
 import { escape } from '@microsoft/sp-lodash-subset';
 
+/*
+  This is the overarching component providing the frame for the entire tool.
+  Each sub component should be broken out into their respective components aiming to keep everything highly modular and re-usable
+*/
+
 export default class PageDesigner extends React.Component<IPageDesignerProps, {}> {
   public render(): React.ReactElement<IPageDesignerProps> {
     return (
