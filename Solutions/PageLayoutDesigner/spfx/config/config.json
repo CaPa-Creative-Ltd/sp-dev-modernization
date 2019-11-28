@@ -23,6 +23,8 @@
   "localizedResources": {
     "PageLayoutDesignerCommandSetStrings": "lib/extensions/pageLayoutDesigner/loc/{locale}.js",
     "PageDesignerWebPartStrings": "lib/webparts/pageDesigner/loc/{locale}.js",
-    "PageDesignerComponentStrings": "lib/components/pageDesigner/loc/{locale}.js"
+    "PageDesignerComponentStrings": "lib/components/pageDesigner/loc/{locale}.js",
+    "DynamicNavigatorComponentStrings": "lib/components/dynamicNavigator/loc/{locale}.js",
+
   }
 }
