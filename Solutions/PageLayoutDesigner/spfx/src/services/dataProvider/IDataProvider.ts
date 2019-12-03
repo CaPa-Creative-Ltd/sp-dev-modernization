@@ -1,9 +1,20 @@
+import IMappingFile from "./IMappingFile";
+
 /*
   Interface for data providers
 
 */
+export interface IDataProvider {
 
-// Get Node Sections - e.g. Header, Web Parts, Metadata
+  // Setup
+  Setup() : void;
 
-// Load Mapping File
+  // Read data from data source
+  GetData() : IMappingFile;
 
+  // Write data to data source
+  WriteData(file: IMappingFile): void;
+
+}
+
+export default IDataProvider;
