@@ -7,6 +7,26 @@
 
 */
 
+
+/* ----------------------------------------
+  Base Properties
+------------------------------------------*/
+
+// Stores the location of the web part
+export interface IWebPartLocation{
+
+  Row: number;
+  Column: number;
+  Order?: number;
+}
+
+// Base Web Part Property
+export interface IBaseWebPart{
+
+  Name: string;
+  Description?: string;
+}
+
 /* ----------------------------------------
   Overall mapping file
 ------------------------------------------*/
@@ -15,8 +35,8 @@ export interface IMappingFile{
   Filename: string;
   PageLayouts: IPageLayout[];
   Version: string;
-
 }
+
 export default IMappingFile;
 
 /* ----------------------------------------
@@ -25,11 +45,11 @@ export default IMappingFile;
 export interface IPageLayout {
 
   // Layout Attributes
-  AssocatedContentType:string;
-  AlsoAppliesTo:string;
+  AssocatedContentType?:string;
+  AlsoAppliesTo?:string;
   PageLayoutTemplate:PageLayoutTemplate;
   PageHeader:PageHeader;
-  IncludeVerticalColumn: boolean;
+  IncludeVerticalColumn?: boolean;
 
   // Navigation
   HasHeaderConfig: boolean;
@@ -37,36 +57,39 @@ export interface IPageLayout {
   HasWebPartMappingConfig: boolean;
   HasWebPartZonesConfig: boolean;
 
+  // Header Mapping
+  Header: IHeaderMapping;
+
   // Metadata Mapping
-  MetadataMappings: IWebPartMapping[];
+  MetaDataMapping: IMetaDataMapping;
 
   // Web Part Mapping
-  WebPartMappings: IWebPartMapping[];
+  WebPartMappings?: IWebPartMapping[];
 
   // Web part Zones
-  WebPartZoneMappings: IWebPartZone[];
+  WebPartZoneMappings?: IWebPartZone[];
 
   // Fixed Web Part Mapping
-  FixedWebPartMappings: IFixedWebPartMapping[];
+  FixedWebPartMappings?: IFixedWebPartMapping[];
 }
 
-enum PageLayoutTemplate{
-  AutoDetect,
-  OneColumn,
-  TwoColumns,
-  TwoColumnsWithSidebarLeft,
-  TwoColumnsWithSidebarRight,
-  TwoColumnsWithHeader,
-  TwoColumnsWithHeaderAndFooter,
-  ThreeColumns,
-  ThreeColumnsWithHeader,
-  ThreeColumnsWithHeaderAndFooter
+export enum PageLayoutTemplate{
+  AutoDetect = "AutoDetect",
+  OneColumn = "OneColumn",
+  TwoColumns = "TwoColumns",
+  TwoColumnsWithSidebarLeft = "TwoColumnsWithSidebarLeft",
+  TwoColumnsWithSidebarRight = "TwoColumnsWithSidebarRight",
+  TwoColumnsWithHeader = "TwoColumnsWithHeader",
+  TwoColumnsWithHeaderAndFooter = "TwoColumnsWithHeaderAndFooter",
+  ThreeColumns = "ThreeColumns",
+  ThreeColumnsWithHeader = "ThreeColumnsWithHeader",
+  ThreeColumnsWithHeaderAndFooter = "ThreeColumnsWithHeaderAndFooter"
 }
 
-enum PageHeader{
-  None,
-  Default,
-  Custom
+export enum PageHeader {
+  None = "None",
+  Default = "Default",
+  Custom = "Custom"
 }
 
 /* ----------------------------------------
@@ -84,80 +107,73 @@ export interface IHeaderMapping{
   ShowPublishedDate: boolean;
 
   // Fields
-  HeaderFields: HeaderField[];
+  HeaderFields: IHeaderField[];
 
 }
 
-export interface HeaderField{
+export interface IHeaderField{
   Name: string;
   HeaderProperty: HeaderProperty;
   Functions: string;
 }
 
-enum HeaderType{
-  FullWidthImage,
-  NoImage,
-  ColorBlock,
-  CutInShape
+export enum HeaderType{
+  FullWidthImage = "FullWidthImage",
+  NoImage = "NoImage",
+  ColorBlock = "ColorBlock",
+  CutInShape = "CutInShape"
 }
 
-enum HeaderAlignment{
-  Left,
-  Center
+export enum HeaderAlignment{
+  Left = "Left",
+  Center = "Center"
 }
 
-enum HeaderProperty{
-  ImageServiceRelativeUrl,
-  TopicHeader,
-  AlternativeText,
-  Authors
+export enum HeaderProperty{
+  ImageServiceRelativeUrl = "ImageServiceRelativeUrl",
+  TopicHeader = "TopicHeader",
+  AlternativeText = "AlternativeText",
+  Authors = "Authors"
 }
 
 /* ----------------------------------------
   Metadata mapping
 ------------------------------------------*/
-export interface IMetaDataMapping extends IBaseWebPart {
+export interface IMetaDataMapping {
   // Fields
   // [Name, Target Field Name, Functions, Show in Page Properties]
-  ShowPageProperties: boolean;
-  MetaDataFields:MetadataField[];
+  MetaDataFields: IMetaDataField[];
+  ShowPageProperties?: boolean;
 }
 
-export interface MetadataField{
+export interface IMetaDataField{
 
   Name: string;
   TargetFieldName:string;
   Functions: string;
-  ShowInPageProperties:boolean;
+  ShowInPageProperties?:boolean;
 }
 
 /* ----------------------------------------
   Web Part Mapping
 ------------------------------------------*/
-export interface IWebPartMapping extends IWebPartLocation{
-
-    // Web Parts
-    WebParts: IWebPart[];
-}
-
-export interface IWebPart extends IBaseWebPart{
-    Name: string;
+export interface IWebPartMapping extends IWebPartLocation,IBaseWebPart{
     TargetWebPart: string;
-    FieldId: string;
+    Properties?: IWebPartProperty[];
 }
 
-export interface WebPartProperty{
+export interface IWebPartProperty{
   Name: string;
   Type: WebPartPropertyType;
-  Functions: string;
+  Functions?: string;
 }
 
-enum WebPartPropertyType{
-  string,
-  bool,
-  guid,
-  integer,
-  datetime
+export enum WebPartPropertyType{
+  string = "string",
+  bool = "bool",
+  guid = "guid",
+  integer = "integer",
+  datetime = "datetime"
 }
 
 /* ----------------------------------------
@@ -169,11 +185,10 @@ export interface IWebPartZone extends IWebPartLocation{
   // [Zone ID, Zone Index]
   ZoneIndex: number;
   ZoneId: string;
-  WebPartZoneLayout: WebPartOccurance[];
+  WebPartZoneLayout?: IWebPartOccurance[];
 }
 
-export interface WebPartOccurance extends IWebPartLocation{
-
+export interface IWebPartOccurance extends IWebPartLocation{
   Type: string;
 }
 
@@ -184,31 +199,14 @@ export interface IFixedWebPartMapping extends IWebPartLocation,IBaseWebPart{
 
   // Fixed Web Part Mapping
   Type: string;
-  FixedWebPartProperties: FixedWebPartProperty[];
+  FixedWebPartProperties?: IFixedWebPartProperty[];
 }
 
 // Single field for web part properties
-export interface FixedWebPartProperty{
+export interface IFixedWebPartProperty{
   Name: string;
   Type: WebPartPropertyType;
   Value: string;
 }
 
 
-/* ----------------------------------------
-  Base Properties
-------------------------------------------*/
-
-// Stores the location of the web part
-export interface IWebPartLocation{
-
-    Row: number;
-    Column: number;
-    Order: number;
-}
-
-// Base Web Part Property
-export interface IBaseWebPart{
-  Name: string;
-  Description: string;
-}

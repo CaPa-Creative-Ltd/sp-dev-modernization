@@ -23,3 +23,18 @@ gulp clean - TODO
 gulp test - TODO
 gulp serve -
 gulp package-solution - TODO
+
+
+## Useful References
+
+https://github.com/isaacs/sax-js
+https://www.npmjs.com/package/xmldoc
+https://github.com/SharePoint/sp-dev-modernization/issues/369
+https://docs.microsoft.com/en-gb/sharepoint/dev/transform/modernize-userinterface-site-pages-model-publishing#page-layout-mapping-faq
+https://www.yannickborghmans.com/
+https://redux-docs.netlify.com/recipes/structuring-reducers/structuring-reducers
+https://redux-docs.netlify.com/recipes/configuring-your-store
+https://react-redux.js.org/introduction/quick-start
+https://redux-toolkit.js.org/
+https://blogs.perficient.com/2017/08/10/using-react-and-redux-in-sharepoint-frameworkspfx/
+https://www.npmjs.com/package/react-redux
