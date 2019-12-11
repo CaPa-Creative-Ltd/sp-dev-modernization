@@ -8,8 +8,8 @@ import {
 } from '@microsoft/sp-webpart-base';
 
 import * as strings from 'PageDesignerWebPartStrings';
-import PageDesigner from '../../components/pageDesigner/PageDesigner';
-import { IPageDesignerProps } from '../../components/pageDesigner/IPageDesignerProps';
+import PageDesigner from '../../components/pageDesignerPanel/PageDesignerPanel';
+import { IPageDesignerPanelProps } from '../../components/pageDesignerPanel/IPageDesignerPanelProps';
 
 export interface IPageDesignerWebPartProps {
   description: string;
@@ -18,7 +18,7 @@ export interface IPageDesignerWebPartProps {
 export default class PageDesignerWebPart extends BaseClientSideWebPart<IPageDesignerWebPartProps> {
 
   public render(): void {
-    const element: React.ReactElement<IPageDesignerProps > = React.createElement(
+    const element: React.ReactElement<IPageDesignerPanelProps > = React.createElement(
       PageDesigner,
       {
         Context: {
