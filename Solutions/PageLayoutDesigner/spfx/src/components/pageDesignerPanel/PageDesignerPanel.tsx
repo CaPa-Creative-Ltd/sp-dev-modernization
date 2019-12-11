@@ -5,6 +5,7 @@ import { escape } from '@microsoft/sp-lodash-subset';
 import { PrimaryButton } from 'office-ui-fabric-react/lib/components/Button';
 import { Panel, PanelType } from 'office-ui-fabric-react/lib/components/Panel';
 import { IPageDesignerPanelState } from './IPageDesignerPanelState';
+import { PageDesigner } from '../pageDesigner';
 
 /*
   This is the overarching component providing the frame for the entire tool.
@@ -68,12 +69,7 @@ export default class PageDesignerPanel extends React.Component<IPageDesignerPane
         headerText="Page Designer"
         isLightDismiss={true}
       >
-        <div className={styles.nav}>
-
-        </div>
-        <div className={styles.editorContainer}>
-
-        </div>
+        <PageDesigner Context={this.props.Context} />
 
       </Panel>
 

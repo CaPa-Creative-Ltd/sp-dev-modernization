@@ -11,7 +11,7 @@ import { Panel, PanelType } from 'office-ui-fabric-react/lib/components/Panel';
   Each sub component should be broken out into their respective components aiming to keep everything highly modular and re-usable
 */
 
-export default class PageDesignerPanel extends React.Component<IPageDesignerProps, {}> {
+export class PageDesigner extends React.Component<IPageDesignerProps, {}> {
 
   /**
    * Constructor for the page designer class
@@ -30,11 +30,13 @@ export default class PageDesignerPanel extends React.Component<IPageDesignerProp
   public render(): React.ReactElement<IPageDesignerProps> {
     return (
       <div className={styles.pageDesigner}>
-        <div className={styles.nav}>
+        Page designer
 
+        <div className={styles.nav}>
+          Nav
         </div>
         <div className={styles.editorContainer}>
-
+          Editor Container
         </div>
       </div>
     );
