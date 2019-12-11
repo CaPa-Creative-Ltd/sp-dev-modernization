@@ -4,7 +4,7 @@ import { IPageDesignerProps } from './IPageDesignerProps';
 import { DynamicNavigator } from '../dynamicNavigator';
 import { FixedWebPartMappingEditor } from '../fixedWebPartMappingEditor';
 import { HeaderConfigEditor } from '../headerConfigEditor';
-import { MetadataMappingEditor} from '../metadataMappingEditor';
+import { MetadataMappingEditor } from '../metadataMappingEditor';
 import { VisualDesigner } from '../visualDesigner';
 import { PageLayoutConfigEditor } from '../pageLayoutConfigEditor';
 import { WebPartMappingEditor } from '../webPartMappingEditor';
@@ -34,22 +34,21 @@ export class PageDesigner extends React.Component<IPageDesignerProps, {}> {
   public render(): React.ReactElement<IPageDesignerProps> {
     return (
       <div className={styles.pageDesigner}>
-        Page designer
+        <div className={styles.row}>
+          <div className={styles.nav}>
+            <DynamicNavigator />
+          </div>
+          <div className={styles.editorContainer}>
+            Editor Container
 
-        <div className={styles.nav}>
-          <DynamicNavigator />
-        </div>
-        <div className={styles.editorContainer}>
-          Editor Container
-
-          <HeaderConfigEditor />
-          <MetadataMappingEditor />
-          <FixedWebPartMappingEditor />
-          <VisualDesigner />
-          <PageLayoutConfigEditor />
-          <WebPartMappingEditor />
-          <WebPartZoneMappingEditor />
-
+            <HeaderConfigEditor />
+            <MetadataMappingEditor />
+            <FixedWebPartMappingEditor />
+            <VisualDesigner />
+            <PageLayoutConfigEditor />
+            <WebPartMappingEditor />
+            <WebPartZoneMappingEditor />
+          </div>
         </div>
       </div>
     );

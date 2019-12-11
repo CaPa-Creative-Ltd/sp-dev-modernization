@@ -2,12 +2,30 @@
 
 .pageDesigner {
 
+  .row{
+
+    @include ms-Grid-row;
+
+  }
+
   .nav{
-    max-width: 200px;
+    @include ms-Grid-col;
+    @include ms-lg2;
+    @include ms-xl2;
   }
 
   .editorContainer{
-    max-width: 700px;
+    @include ms-Grid-col;
+    @include ms-lg10;
+    @include ms-xl10;
+  }
+
+  .column {
+    @include ms-Grid-col;
+    @include ms-lg10;
+
+    @include ms-xlPush2;
+    @include ms-lgPush1;
   }
 
 }
