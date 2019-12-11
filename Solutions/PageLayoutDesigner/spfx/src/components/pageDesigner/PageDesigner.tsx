@@ -1,10 +1,7 @@
 import * as React from 'react';
 import styles from './PageDesigner.module.scss';
 import { IPageDesignerProps } from './IPageDesignerProps';
-import { escape } from '@microsoft/sp-lodash-subset';
-import { PrimaryButton } from 'office-ui-fabric-react/lib/components/Button';
-import { Panel, PanelType } from 'office-ui-fabric-react/lib/components/Panel';
-
+import { DynamicNavigator } from '../dynamicNavigator';
 
 /*
   This is the overarching component providing the frame for the entire tool.
@@ -25,7 +22,7 @@ export class PageDesigner extends React.Component<IPageDesignerProps, {}> {
 
 
   /**
-   *  Render method for the web part
+   *  Render method for the component
    */
   public render(): React.ReactElement<IPageDesignerProps> {
     return (
@@ -33,7 +30,7 @@ export class PageDesigner extends React.Component<IPageDesignerProps, {}> {
         Page designer
 
         <div className={styles.nav}>
-          Nav
+          <DynamicNavigator />
         </div>
         <div className={styles.editorContainer}>
           Editor Container
