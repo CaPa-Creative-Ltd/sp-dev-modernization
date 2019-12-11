@@ -5,6 +5,9 @@ import { DynamicNavigator } from '../dynamicNavigator';
 import { FixedWebPartMappingEditor } from '../fixedWebPartMappingEditor';
 import { HeaderConfigEditor } from '../headerConfigEditor';
 import { MetadataMappingEditor} from '../metadataMappingEditor';
+import { VisualDesigner } from '../visualDesigner';
+
+
 /*
   This is the overarching component providing the frame for the entire tool.
   Each sub component should be broken out into their respective components aiming to keep everything highly modular and re-usable
@@ -40,6 +43,7 @@ export class PageDesigner extends React.Component<IPageDesignerProps, {}> {
           <HeaderConfigEditor />
           <MetadataMappingEditor />
           <FixedWebPartMappingEditor />
+          <VisualDesigner />
 
         </div>
       </div>
