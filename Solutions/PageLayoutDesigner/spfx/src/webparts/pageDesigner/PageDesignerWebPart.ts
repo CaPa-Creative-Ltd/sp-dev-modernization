@@ -21,7 +21,10 @@ export default class PageDesignerWebPart extends BaseClientSideWebPart<IPageDesi
     const element: React.ReactElement<IPageDesignerProps > = React.createElement(
       PageDesigner,
       {
-        description: this.properties.description
+        Context: {
+          pageContext: this.context.pageContext,
+          spHttpClient: this.context.spHttpClient
+        }
       }
     );
 

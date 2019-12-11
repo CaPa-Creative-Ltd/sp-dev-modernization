@@ -1,3 +1,5 @@
+import { IContext } from "../../common";
+
 export interface IPageDesignerProps {
-  description: string;
+  Context: IContext;
 }
