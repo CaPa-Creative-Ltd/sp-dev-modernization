@@ -2,6 +2,7 @@ import * as React from 'react';
 import styles from './PageDesigner.module.scss';
 import { IPageDesignerProps } from './IPageDesignerProps';
 import { DynamicNavigator } from '../dynamicNavigator';
+import { FixedWebPartMappingEditor } from '../fixedWebPartMappingEditor';
 
 /*
   This is the overarching component providing the frame for the entire tool.
@@ -34,6 +35,10 @@ export class PageDesigner extends React.Component<IPageDesignerProps, {}> {
         </div>
         <div className={styles.editorContainer}>
           Editor Container
+
+
+          <FixedWebPartMappingEditor />
+
         </div>
       </div>
     );
