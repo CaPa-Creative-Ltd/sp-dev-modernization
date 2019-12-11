@@ -5,4 +5,4 @@ export interface IWebPartMappingEditorProps{
 
 }
 
-export default
+export default IWebPartMappingEditorProps;

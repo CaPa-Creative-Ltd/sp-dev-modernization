@@ -1,2 +1,2 @@
 export * from "./IVisualDesignerProps";
-export * from "./VisualDesigner"
+export * from "./VisualDesigner";
