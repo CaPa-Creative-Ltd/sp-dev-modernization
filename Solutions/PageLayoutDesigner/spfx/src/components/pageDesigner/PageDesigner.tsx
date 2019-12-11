@@ -6,7 +6,7 @@ import { FixedWebPartMappingEditor } from '../fixedWebPartMappingEditor';
 import { HeaderConfigEditor } from '../headerConfigEditor';
 import { MetadataMappingEditor} from '../metadataMappingEditor';
 import { VisualDesigner } from '../visualDesigner';
-
+import { PageLayoutConfigEditor } from '../pageLayoutConfigEditor';
 
 /*
   This is the overarching component providing the frame for the entire tool.
@@ -44,6 +44,7 @@ export class PageDesigner extends React.Component<IPageDesignerProps, {}> {
           <MetadataMappingEditor />
           <FixedWebPartMappingEditor />
           <VisualDesigner />
+          <PageLayoutConfigEditor />
 
         </div>
       </div>
