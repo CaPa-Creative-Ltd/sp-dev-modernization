@@ -38,3 +38,7 @@ https://react-redux.js.org/introduction/quick-start
 https://redux-toolkit.js.org/
 https://blogs.perficient.com/2017/08/10/using-react-and-redux-in-sharepoint-frameworkspfx/
 https://www.npmjs.com/package/react-redux
+
+## Code Used from following projects
+
+https://github.com/SharePoint/sp-dev-fx-controls-react
