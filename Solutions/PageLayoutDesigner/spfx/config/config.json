@@ -26,6 +26,8 @@
     "PageDesignerPanelComponentStrings": "lib/components/pageDesignerPanel/loc/{locale}.js",
     "PageDesignerComponentStrings": "lib/components/pageDesigner/loc/{locale}.js",
     "DynamicNavigatorComponentStrings": "lib/components/dynamicNavigator/loc/{locale}.js",
-    "VisualDesignerComponentStrings": "lib/components/visualDesigner/loc/{locale}.js"
+    "VisualDesignerComponentStrings": "lib/components/visualDesigner/loc/{locale}.js",
+
+    "PageLayoutConfigComponentStrings": "lib/components/pageLayoutConfigEditor/loc/{locale}.js"
   }
 }

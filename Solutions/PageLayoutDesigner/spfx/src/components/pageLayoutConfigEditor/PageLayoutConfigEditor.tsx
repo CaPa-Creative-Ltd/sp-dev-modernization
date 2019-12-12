@@ -1,8 +1,18 @@
 import * as React from 'react';
 
-import { IPageLayoutConfigEditorProps } from './IPageLayoutConfigEditorProps';
+import { TextField } from 'office-ui-fabric-react/lib/TextField';
+import { Stack } from 'office-ui-fabric-react/lib/Stack';
+import { getId } from 'office-ui-fabric-react/lib/Utilities';
 
-export class PageLayoutConfigEditor extends React.Component<IPageLayoutConfigEditorProps, {}> {
+import { IPageLayoutConfigEditorProps } from './IPageLayoutConfigEditorProps';
+import { IPageLayoutConfigEditorState } from './IPageLayoutConfigEditorState';
+import { HelpfulLabel } from '../form/helpfulLabel';
+
+import * as strings from 'PageLayoutConfigComponentStrings';
+
+export class PageLayoutConfigEditor extends React.Component<IPageLayoutConfigEditorProps, IPageLayoutConfigEditorState> {
+
+  private _labelId: string = getId('label');
 
   /**
    * Constructor for the page designer class
@@ -11,7 +21,6 @@ export class PageLayoutConfigEditor extends React.Component<IPageLayoutConfigEdi
   constructor(props: IPageLayoutConfigEditorProps) {
     super(props);
 
-
   }
 
 
@@ -19,9 +28,19 @@ export class PageLayoutConfigEditor extends React.Component<IPageLayoutConfigEdi
    *  Render method for the component
    */
   public render(): React.ReactElement<IPageLayoutConfigEditorProps> {
+
     return (
       <div>
-       Page Layout Config Editor
+        <h3>{strings.PageLayoutConfigEditorTitle}</h3>
+        <Stack tokens={{ childrenGap: 20 }}>
+          <TextField
+            aria-labelledby={this._labelId}
+            label={strings.AssociatedContentTypeLabel}
+            onRenderLabel={() => {
+              return <HelpfulLabel Label={strings.AssociatedContentTypeLabel} HelpfulDescription={strings.AssociatedContentTypeHelpfulDescription} />;
+            }}
+          />
+        </Stack>
       </div>
     );
   }
