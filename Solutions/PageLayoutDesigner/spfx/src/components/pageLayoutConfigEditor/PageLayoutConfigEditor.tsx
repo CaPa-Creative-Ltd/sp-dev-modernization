@@ -3,6 +3,7 @@ import * as React from 'react';
 import { TextField } from 'office-ui-fabric-react/lib/TextField';
 import { Stack } from 'office-ui-fabric-react/lib/Stack';
 import { getId } from 'office-ui-fabric-react/lib/Utilities';
+import { Dropdown } from 'office-ui-fabric-react/lib/Dropdown';
 
 import { IPageLayoutConfigEditorProps } from './IPageLayoutConfigEditorProps';
 import { IPageLayoutConfigEditorState } from './IPageLayoutConfigEditorState';
@@ -40,6 +41,31 @@ export class PageLayoutConfigEditor extends React.Component<IPageLayoutConfigEdi
               return <HelpfulLabel Label={strings.AssociatedContentTypeLabel} HelpfulDescription={strings.AssociatedContentTypeHelpfulDescription} />;
             }}
           />
+
+          <TextField
+            aria-labelledby={this._labelId}
+            label={strings.AlsoAppliesToLabel}
+            onRenderLabel={() => {
+              return <HelpfulLabel Label={strings.AlsoAppliesToLabel} HelpfulDescription={strings.AlsoAppliesToHelpfulDescription} />;
+            }}
+          />
+
+        {
+        //This needs some work, not right
+        }
+        <HelpfulLabel Label={strings.PageLayoutTemplateLabel} HelpfulDescription={strings.PageLayoutTemplateHelpfulDescription} />
+        <Dropdown
+          ariaLabel={strings.PageLayoutTemplateLabel}
+          styles={{ dropdown: { width: 300 } }}
+          options={
+            [{ key: 'AutoDetect', text: 'Auto Detect', },
+            { key: 'G', text: 'Option g' },
+            { key: 'H', text: 'Option h' },
+            { key: 'I', text: 'Option i' },
+            { key: 'J', text: 'Option j' } ]
+          }
+        />
+
         </Stack>
       </div>
     );

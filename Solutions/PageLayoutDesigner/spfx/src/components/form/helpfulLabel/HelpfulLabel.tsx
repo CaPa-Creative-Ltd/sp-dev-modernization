@@ -28,11 +28,11 @@ export class HelpfulLabel extends React.Component<IHelpfulLabelProps, IHelpfulLa
 
   private _onIconClick = (): void => {
     this.setState({ isCalloutVisible: !this.state.isCalloutVisible });
-  };
+  }
 
   private _onDismiss = (): void => {
     this.setState({ isCalloutVisible: false });
-  };
+  }
 
   /**
    *  Render method for the component

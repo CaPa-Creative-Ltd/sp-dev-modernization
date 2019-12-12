@@ -4,6 +4,13 @@ declare interface IPageLayoutConfigComponentStrings {
 
   AssociatedContentTypeLabel: string;
   AssociatedContentTypeHelpfulDescription:string;
+
+  AlsoAppliesToLabel:string;
+  AlsoAppliesToHelpfulDescription:string;
+
+  PageLayoutTemplateLabel:string;
+  PageLayoutTemplateHelpfulDescription: string;
+
 }
 
 declare module 'PageLayoutConfigComponentStrings' {
