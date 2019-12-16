@@ -8,6 +8,10 @@ import IMappingFile from "./dataProvider/IMappingFile";
 /*
     Class for managing the data aspect. This will allow connection to a variety of data providers to store the layout files.
     The data manager will also be responsible for governing the data operations between the various data sources
+
+    Checkout/Check in
+    Get File call to parse and output a IMappingFile.
+    Error Handling
 */
 
 // Load data and populate state

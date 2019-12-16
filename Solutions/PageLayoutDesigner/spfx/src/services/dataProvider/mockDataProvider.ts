@@ -1,5 +1,6 @@
 import IDataProvider from "./IDataProvider";
 import { IMappingFile, IPageLayout, PageHeader, IWebPartLocation, PageLayoutTemplate, IMetaDataField, WebPartPropertyType, HeaderType, HeaderAlignment, HeaderProperty } from "./IMappingFile";
+import { IContext } from "../../common";
 
 /*
   Provider for storing and retrieving data in memory for development purposes
@@ -10,11 +11,11 @@ class MockDataProvider implements IDataProvider{
 
   // Constructor
   public constructor() {
-    this.Setup();
+    this.Setup(null);
   }
 
   // Setup the fake data
-  public Setup(): void {
+  public Setup(context: IContext): void {
 
     // Does nothing
     this._mappingFile.Version = "9.9.9.9"; // Mock Version
@@ -109,6 +110,14 @@ class MockDataProvider implements IDataProvider{
   // Write the fake data
   public WriteData(file: IMappingFile): void {
     // Does nothing
+    return;
+  }
+
+  public StartSession():void{
+    return;
+  }
+
+  public EndSession():void{
     return;
   }
 }
