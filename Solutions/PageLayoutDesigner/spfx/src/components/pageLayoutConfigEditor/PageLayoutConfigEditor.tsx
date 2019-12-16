@@ -4,6 +4,7 @@ import { TextField } from 'office-ui-fabric-react/lib/TextField';
 import { Stack } from 'office-ui-fabric-react/lib/Stack';
 import { getId } from 'office-ui-fabric-react/lib/Utilities';
 import { Dropdown } from 'office-ui-fabric-react/lib/Dropdown';
+import { Toggle } from 'office-ui-fabric-react/lib/Toggle';
 
 import { IPageLayoutConfigEditorProps } from './IPageLayoutConfigEditorProps';
 import { IPageLayoutConfigEditorState } from './IPageLayoutConfigEditorState';
@@ -64,6 +65,31 @@ export class PageLayoutConfigEditor extends React.Component<IPageLayoutConfigEdi
             { key: 'I', text: 'Option i' },
             { key: 'J', text: 'Option j' } ]
           }
+        />
+
+        {
+          //This needs some work, not right
+        }
+        <HelpfulLabel Label={strings.PageLayoutHeaderLabel} HelpfulDescription={strings.PageLayoutHeaderHelpfulDescription} />
+        <Dropdown
+          ariaLabel={strings.PageLayoutHeaderLabel}
+          styles={{ dropdown: { width: 300 } }}
+          options={
+            [{ key: 'AutoDetect', text: 'Auto Detect', },
+            { key: 'G', text: 'Option g' },
+            { key: 'H', text: 'Option h' },
+            { key: 'I', text: 'Option i' },
+            { key: 'J', text: 'Option j' } ]
+          }
+        />
+
+        <Toggle
+          label={
+            <HelpfulLabel Label={strings.IncludeVerticalSectionLabel} HelpfulDescription={strings.IncludeVerticalSectionHelpfulDescription} />
+          }
+          inlineLabel
+          onText="On"
+          offText="Off"
         />
 
         </Stack>

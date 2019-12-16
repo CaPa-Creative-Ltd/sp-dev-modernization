@@ -10,7 +10,13 @@ define([], function() {
     'AlsoAppliesToHelpfulDescription':'Other page layouts this configuration applies to',
 
     'PageLayoutTemplateLabel':'Page Layout Template',
-    'PageLayoutTemplateHelpfulDescription':'Select a page layout template for a pre-determined layout'
+    'PageLayoutTemplateHelpfulDescription':'Select a page layout template for a pre-determined layout',
+
+    'PageLayoutHeaderLabel':'Page Header',
+    'PageLayoutHeaderHelpfulDescription': '',
+
+    'IncludeVerticalSectionLabel': 'Include vertical section',
+    'IncludeVerticalSectionHelpfulDescription': '',
 
   }
 });

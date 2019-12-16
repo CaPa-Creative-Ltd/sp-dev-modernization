@@ -11,6 +11,12 @@ declare interface IPageLayoutConfigComponentStrings {
   PageLayoutTemplateLabel:string;
   PageLayoutTemplateHelpfulDescription: string;
 
+  PageLayoutHeaderLabel:string;
+  PageLayoutHeaderHelpfulDescription: string
+
+  IncludeVerticalSectionLabel:string;
+  IncludeVerticalSectionHelpfulDescription:string;
+
 }
 
 declare module 'PageLayoutConfigComponentStrings' {
