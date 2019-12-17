@@ -11,6 +11,8 @@ import { INavigationReference } from '../../common';
 
 export class DynamicNavigator extends React.Component<IDynamicNavigatorProps, IDynamicNavigatorState> {
 
+  private _generatedNavigation:INavLink; //TODO: Bad, make strongly typed.
+
   /**
    * Constructor for the page designer class
    * @param props
@@ -25,9 +27,66 @@ export class DynamicNavigator extends React.Component<IDynamicNavigatorProps, ID
 
   }
 
-  private _setup(NavReferences: INavigationReference[]):void{
+  private _setupNavigation(NavReferences: INavigationReference[]):INavLink[]{
 
+    let navLinks:INavLink[];
 
+      this.props.NavigationReferences.forEach(navRef => {
+        let nav:INavLink;
+        nav = {
+          name: navRef.LayoutTitle,
+          url:'',
+          expandAriaLabel: 'Expand ' + navRef.LayoutTitle,
+          collapseAriaLabel: 'Collapse ' + navRef.LayoutTitle,
+          links: [
+            { name: 'Page Layout Configuration', url: '', key: 'PageLayoutConfig-' + navRef.LayoutTempId.toString() },
+          ]
+        };
+
+        //TODO: Make names constants
+        if(navRef.HasHeaderConfig){
+          nav.links.push({
+            name: 'Header',
+            url: '',
+            key: 'Header-' + navRef.LayoutTempId.toString()
+          });
+        }
+
+        if(navRef.HasMetadataMappingConfig){
+          nav.links.push({
+            name: 'Metadata Mapping',
+            url: '',
+            key: 'MetadataMapping-' + navRef.LayoutTempId.toString()
+          });
+        }
+
+        if(navRef.HasWebPartMappingConfig){
+          nav.links.push({
+            name: 'Web Part Mapping',
+            url: '',
+            key: 'WebPartMapping-' + navRef.LayoutTempId.toString()
+          });
+        }
+
+        if(navRef.HasWebPartZonesConfig){
+          nav.links.push({
+            name: 'Web Part Zones',
+            url: '',
+            key: 'WebPartZones-' + navRef.LayoutTempId.toString()
+          });
+        }
+
+        if(navRef.HasWebPartZonesConfig){
+          nav.links.push({
+            name: 'Fixed Web Part Mapping',
+            url: '',
+            key: 'FixedWebPartMapping-' + navRef.LayoutTempId.toString()
+          });
+        }
+        navLinks.push(nav);
+      });
+
+      return navLinks;
   }
 
   private _onRenderGroupHeader(group: INavLinkGroup): JSX.Element {
@@ -37,7 +96,7 @@ export class DynamicNavigator extends React.Component<IDynamicNavigatorProps, ID
   private _onLinkClick(ev?: React.MouseEvent<HTMLElement, MouseEvent>, item?: INavLink): void{
 
     // The item objecct is the same properties as the selected link e.g. item.name or item.key if in an array
-    // alert(item.key);
+    // This needs to bubble up to parent control that a navigation link has been clicked.
   }
 
   /**
@@ -53,23 +112,7 @@ export class DynamicNavigator extends React.Component<IDynamicNavigatorProps, ID
           groups={[
             {
               name: 'Layout Navigation',
-              links: [
-                {
-                  name: 'Sample Page Layout',
-                  url: '',
-                  expandAriaLabel: 'Expand Parent Sample Page Layout',
-                  collapseAriaLabel: 'Collapse Parent Sample Page Layout',
-                  links: [
-                    { name: 'Page Layout Configuration', url: '', key: 'key1' },
-                    { name: 'Header', url: '', key: 'key2' },
-                    { name: 'Metadata Mapping', url: '', key: 'key3' },
-                    { name: 'Web Part Mapping', url: '', key: 'key4' },
-                    { name: 'Web Part Zones', url: '', key: 'key5' },
-                    { name: 'Fixed Web Part Mapping', url: '', key: 'key6' },
-                    { name: 'Designer', url: '', key: 'key7' }
-                  ]
-                }
-              ]
+              links: this._setupNavigation(this.props.NavigationReferences)
             }
           ]}
         />
