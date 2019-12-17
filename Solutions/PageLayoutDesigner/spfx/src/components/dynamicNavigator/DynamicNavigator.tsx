@@ -27,11 +27,12 @@ export class DynamicNavigator extends React.Component<IDynamicNavigatorProps, ID
 
   }
 
-  private _setupNavigation(NavReferences: INavigationReference[]):INavLink[]{
+  private _setupNavigation(navReferences: INavigationReference[]):INavLink[]{
 
-    let navLinks:INavLink[];
+    let navLinks:INavLink[] = [];
 
-      this.props.NavigationReferences.forEach(navRef => {
+    if(navReferences !== null){
+      navReferences.forEach(navRef => {
         let nav:INavLink;
         nav = {
           name: navRef.LayoutTitle,
@@ -85,8 +86,9 @@ export class DynamicNavigator extends React.Component<IDynamicNavigatorProps, ID
         }
         navLinks.push(nav);
       });
+    }
 
-      return navLinks;
+    return navLinks;
   }
 
   private _onRenderGroupHeader(group: INavLinkGroup): JSX.Element {
