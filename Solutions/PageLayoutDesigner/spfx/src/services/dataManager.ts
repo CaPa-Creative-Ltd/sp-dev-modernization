@@ -27,7 +27,7 @@ class DataManager {
    */
   public constructor(props: IDataManagerProps) {
 
-      if(props.EnvironmentType == EnvironmentType.Local){
+      if(props.Context.EnvironmentType == EnvironmentType.Local){
         this._dataProvider = new MockDataProvider();
       }else{
         this._dataProvider = new SharePointDataProvider();
@@ -38,7 +38,7 @@ class DataManager {
   /**
    * Get layout file from the data source
    */
-  public GetLayout() : IMappingFile {
+  public GetMappingFile() : IMappingFile {
 
     //TODO: Add error handling
     let mapping:IMappingFile = this._dataProvider.GetData();
@@ -50,7 +50,7 @@ class DataManager {
    * Update layout file against the data source
    * @param mappingFile
    */
-  public UpdateLayout(mappingFile:IMappingFile): void {
+  public UpdateMappingFile(mappingFile:IMappingFile): void {
 
     //TODO: Add error handling
     this._dataProvider.WriteData(mappingFile);

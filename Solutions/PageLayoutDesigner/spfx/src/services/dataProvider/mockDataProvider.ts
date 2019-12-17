@@ -19,8 +19,10 @@ class MockDataProvider implements IDataProvider{
 
     // Does nothing
     this._mappingFile.Version = "9.9.9.9"; // Mock Version
-    this._mappingFile.Filename = "FakeData.xml"; // Mock File
+    this._mappingFile.Filename = "Mock.xml"; // Mock File
     this._mappingFile.PageLayouts = [{
+
+      Name: "MockLayout",
 
       AlsoAppliesTo: "Another Sample Layout",
       AssocatedContentType: "Sample Content Type",
@@ -28,10 +30,6 @@ class MockDataProvider implements IDataProvider{
       PageLayoutTemplate: PageLayoutTemplate.AutoDetect,
 
       // These are used to determine if the navigation UI shows the section controls
-      HasHeaderConfig: true,
-      HasMetadataMappingConfig: true,
-      HasWebPartMappingConfig: true,
-      HasWebPartZonesConfig: true,
       IncludeVerticalColumn: true,
 
       Header: {

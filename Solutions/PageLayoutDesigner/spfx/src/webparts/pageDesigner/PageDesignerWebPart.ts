@@ -1,6 +1,6 @@
 import * as React from 'react';
 import * as ReactDom from 'react-dom';
-import { Version } from '@microsoft/sp-core-library';
+import { Version, EnvironmentType, Environment } from '@microsoft/sp-core-library';
 import {
   BaseClientSideWebPart,
   IPropertyPaneConfiguration,
@@ -22,8 +22,9 @@ export default class PageDesignerWebPart extends BaseClientSideWebPart<IPageDesi
       PageDesigner,
       {
         Context: {
-          pageContext: this.context.pageContext,
-          spHttpClient: this.context.spHttpClient
+          PageContext: this.context.pageContext,
+          SPHttpClient: this.context.spHttpClient,
+          EnvironmentType: Environment.type
         }
       }
     );

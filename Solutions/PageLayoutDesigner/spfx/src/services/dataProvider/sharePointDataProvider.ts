@@ -37,7 +37,7 @@ class SharePointDataProvider implements IDataProvider{
    */
   public downloadSPFileContent = async (absoluteFileUrl: string, fileName: string): Promise<File> => {
     try {
-      const fileDownloadResult = await this._context.spHttpClient.get(absoluteFileUrl, SPHttpClient.configurations.v1);
+      const fileDownloadResult = await this._context.SPHttpClient.get(absoluteFileUrl, SPHttpClient.configurations.v1);
 
       if (!fileDownloadResult || !fileDownloadResult.ok) {
         throw new Error(`Something went wrong when downloading the file. Status='${fileDownloadResult.status}'`);

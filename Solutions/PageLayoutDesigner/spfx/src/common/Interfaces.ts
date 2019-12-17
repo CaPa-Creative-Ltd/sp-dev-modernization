@@ -1,15 +1,17 @@
 import { SPHttpClient } from '@microsoft/sp-http';
 import { PageContext, SPField } from '@microsoft/sp-page-context';
 import { ListViewAccessor } from "@microsoft/sp-listview-extensibility";
+import { EnvironmentType, Guid } from '@microsoft/sp-core-library';
 
 /**
  * Customizer context interface.
  * Can be used in different types of customizers
  */
 export interface IContext {
-    spHttpClient: SPHttpClient;
-    pageContext: PageContext;
-    listView?: ListViewAccessor | null;
+    SPHttpClient: SPHttpClient;
+    PageContext: PageContext;
+    ListView?: ListViewAccessor | null;
+    EnvironmentType: EnvironmentType;
 }
 
 /**
@@ -17,4 +19,15 @@ export interface IContext {
  */
 export interface IProps {
     context: IContext;
+}
+
+
+export interface INavigationReference{
+  HasHeaderConfig: boolean;
+  HasMetadataMappingConfig: boolean;
+  HasWebPartMappingConfig: boolean;
+  HasWebPartZonesConfig: boolean;
+  HasDesigner:boolean;
+  LayoutTitle:string;
+  LayoutTempId:Guid;
 }

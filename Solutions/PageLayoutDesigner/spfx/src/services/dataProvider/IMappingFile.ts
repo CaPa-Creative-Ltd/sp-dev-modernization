@@ -44,6 +44,8 @@ export default IMappingFile;
 ------------------------------------------*/
 export interface IPageLayout {
 
+  Name: string;
+
   // Layout Attributes
   AssocatedContentType?:string;
   AlsoAppliesTo?:string;
@@ -51,17 +53,11 @@ export interface IPageLayout {
   PageHeader:PageHeader;
   IncludeVerticalColumn?: boolean;
 
-  // Navigation
-  HasHeaderConfig: boolean;
-  HasMetadataMappingConfig: boolean;
-  HasWebPartMappingConfig: boolean;
-  HasWebPartZonesConfig: boolean;
-
   // Header Mapping
-  Header: IHeaderMapping;
+  Header?: IHeaderMapping;
 
   // Metadata Mapping
-  MetaDataMapping: IMetaDataMapping;
+  MetaDataMapping?: IMetaDataMapping;
 
   // Web Part Mapping
   WebPartMappings?: IWebPartMapping[];

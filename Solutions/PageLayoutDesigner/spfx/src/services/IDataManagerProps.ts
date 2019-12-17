@@ -6,10 +6,7 @@ import { EnvironmentType } from "@microsoft/sp-core-library";
 */
 
 export interface IDataManagerProps{
-
     Context: IContext;
-    EnvironmentType: EnvironmentType;
-
 }
 
 export default IDataManagerProps;

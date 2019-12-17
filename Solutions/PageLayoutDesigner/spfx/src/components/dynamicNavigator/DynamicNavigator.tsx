@@ -4,10 +4,31 @@ import { Nav, INavLinkGroup, INavLink } from 'office-ui-fabric-react/lib/Nav';
 import styles from './DynamicNavigator.module.scss';
 
 import { IDynamicNavigatorProps } from './IDynamicNavigatorProps';
+import { IDynamicNavigatorState } from './IDynamicNavigatorState';
+import { IMappingFile } from '../../services/dataProvider/IMappingFile';
+import { INavigationReference } from '../../common';
 
 
-export class DynamicNavigator extends React.Component<IDynamicNavigatorProps, {}> {
+export class DynamicNavigator extends React.Component<IDynamicNavigatorProps, IDynamicNavigatorState> {
 
+  /**
+   * Constructor for the page designer class
+   * @param props
+   */
+  constructor(props: IDynamicNavigatorProps) {
+    super(props);
+
+    //initialise state
+    this.state = {
+
+    };
+
+  }
+
+  private _setup(NavReferences: INavigationReference[]):void{
+
+
+  }
 
   private _onRenderGroupHeader(group: INavLinkGroup): JSX.Element {
     return <h3>{group.name}</h3>;
