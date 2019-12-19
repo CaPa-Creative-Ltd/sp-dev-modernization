@@ -1,4 +1,3 @@
-
 /*
   Design Notes
     - Aim to keep the data source very similar to the schema of the XML file.
@@ -67,6 +66,8 @@ export interface IPageLayout {
 
   // Fixed Web Part Mapping
   FixedWebPartMappings?: IFixedWebPartMapping[];
+
+  LayoutId: string;
 }
 
 export enum PageLayoutTemplate{

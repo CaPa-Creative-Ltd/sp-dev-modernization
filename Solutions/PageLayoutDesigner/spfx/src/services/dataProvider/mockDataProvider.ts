@@ -1,6 +1,7 @@
 import IDataProvider from "./IDataProvider";
 import { IMappingFile, IPageLayout, PageHeader, IWebPartLocation, PageLayoutTemplate, IMetaDataField, WebPartPropertyType, HeaderType, HeaderAlignment, HeaderProperty } from "./IMappingFile";
 import { IContext } from "../../common";
+import { Guid } from "@microsoft/sp-core-library";
 
 /*
   Provider for storing and retrieving data in memory for development purposes
@@ -94,6 +95,8 @@ class MockDataProvider implements IDataProvider{
             ]
           }
         ],
+
+        LayoutId: Guid.newGuid().toString()
       },
       {
         Name: "Mock Layout 2",
@@ -124,7 +127,9 @@ class MockDataProvider implements IDataProvider{
 
         FixedWebPartMappings: null,
         WebPartMappings: null,
-        WebPartZoneMappings: null
+        WebPartZoneMappings: null,
+
+        LayoutId: Guid.newGuid().toString()
       }
       ]
     };

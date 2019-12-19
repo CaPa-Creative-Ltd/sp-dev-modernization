@@ -6,6 +6,39 @@ import { INavigationReference } from "./Interfaces";
  */
 export class MappingsUtility {
 
+  public static NAVSPLITOKEN:string = "#;";
+  public static HEADER:string = "Header";
+  public static METADATA:string = "MetaData";
+  public static WEBPARTMAPPING: string = "WebPartMapping";
+  public static WEBPARTZONES: string = "WebPartZones";
+  public static FIXEDWEBPART: string = "FixedWebPart";
+  public static DESIGNER:string = "Designer";
+
+  /**
+   *
+   * @param key Extracts the name from the navlink key value
+   */
+  public static GetNameFromNavLinkKey(key: string):string{
+
+    if(key.indexOf(this.NAVSPLITOKEN) > -1){
+      return key.split(this.NAVSPLITOKEN)[0];
+    }
+
+    return "";
+  }
+
+/**
+   *
+   * @param key Extracts the name from the navlink key value
+   */
+  public static GetLayoutIdFromNavLinkKey(key: string):string{
+
+    if(key.indexOf(this.NAVSPLITOKEN) > -1){
+      return key.split(this.NAVSPLITOKEN)[1];
+    }
+
+    return "";
+  }
 
   /**
    * Checks to see of the mapping file contains the nodes
@@ -19,29 +52,29 @@ export class MappingsUtility {
 
       mappingFile.PageLayouts.forEach(layout => {
 
-        let layoutTempId: string = Guid.newGuid().toString();
+        let token:string = MappingsUtility.NAVSPLITOKEN;
 
         let navRef: INavigationReference = {
           HasHeaderConfig: (layout.Header !== null),
-          HeaderNavLinkKey: "Header#;" + layoutTempId,
+          HeaderNavLinkKey: this.HEADER + token + layout.LayoutId,
 
           HasMetadataMappingConfig: (layout.MetaDataMapping !== null),
-          MetadataNavLinkKey: "MetaData#;" + layoutTempId,
+          MetadataNavLinkKey: this.METADATA + token + layout.LayoutId,
 
           HasWebPartMappingConfig: (layout.WebPartMappings !== null),
-          WebPartMappingNavLinkKey: "WebPartMapping#;" + layoutTempId,
+          WebPartMappingNavLinkKey: this.WEBPARTMAPPING + token + layout.LayoutId,
 
           HasWebPartZonesConfig: (layout.WebPartZoneMappings !== null),
-          WebPartZonesNavLinkKey: "WebPartZones#;" + layoutTempId,
+          WebPartZonesNavLinkKey: this.WEBPARTZONES + token + layout.LayoutId,
 
           HasFixedWebPartMapping: (layout.FixedWebPartMappings !== null),
-          FixedWebPartNavLinkKey: "FixedWebPart#;" + layoutTempId,
+          FixedWebPartNavLinkKey: this.FIXEDWEBPART + token + layout.LayoutId,
 
           HasDesigner: (layout.WebPartMappings !== null || layout.WebPartZoneMappings !== null),
-          DesignerNavLinkKey: "Designer#;" + layoutTempId,
+          DesignerNavLinkKey: this.DESIGNER + token + layout.LayoutId,
 
           LayoutTitle: layout.Name,
-          LayoutId: layoutTempId
+          LayoutId: layout.LayoutId
         };
 
         navigationReferences.push(navRef);

@@ -14,6 +14,7 @@ import IMappingFile from '../../services/dataProvider/IMappingFile';
 import { MappingsUtility } from '../../common/MappingUtility';
 import { INavigationReference } from '../../common';
 import { Nav, INavLink, INavLinkGroup } from 'office-ui-fabric-react/lib/Nav';
+import { IPageDesignerState } from './IPageDesignerState';
 
 /*
   This is the overarching component providing the frame for the entire tool.
@@ -21,7 +22,7 @@ import { Nav, INavLink, INavLinkGroup } from 'office-ui-fabric-react/lib/Nav';
   Majority of the processing will occur here
 */
 
-export class PageDesigner extends React.Component<IPageDesignerProps, {}> {
+export class PageDesigner extends React.Component<IPageDesignerProps, IPageDesignerState> {
 
   private _mappings: IMappingFile;
   private _navigationReferences: INavigationReference[];
@@ -32,6 +33,11 @@ export class PageDesigner extends React.Component<IPageDesignerProps, {}> {
    */
   constructor(props: IPageDesignerProps) {
     super(props);
+
+    this.state = {
+      selectedLinkName: "",
+      selectedLayoutId: ""
+    };
 
     //TODO: Check to see if this is the best initialisation location
     this._loadMappings();
@@ -65,7 +71,7 @@ export class PageDesigner extends React.Component<IPageDesignerProps, {}> {
           expandAriaLabel: 'Expand ' + navRef.LayoutTitle,
           collapseAriaLabel: 'Collapse ' + navRef.LayoutTitle,
           links: [
-            { name: 'Page Layout Configuration', url: '', key: 'PageLayoutConfig-' + navRef.LayoutId.toString() },
+            { name: 'Page Layout Configuration', url: '', key: 'PageLayoutConfig#;' + navRef.LayoutId },
           ]
         };
 
@@ -104,6 +110,10 @@ export class PageDesigner extends React.Component<IPageDesignerProps, {}> {
 
     // The item objecct is the same properties as the selected link e.g. item.name or item.key if in an array
     // This needs to bubble up to parent control that a navigation link has been clicked.
+    let name:string = MappingsUtility.GetNameFromNavLinkKey(item.key);
+    let layoutId: string = MappingsUtility.GetLayoutIdFromNavLinkKey(item.key);
+
+
   }
 
   /**
