@@ -1,7 +1,6 @@
 import * as React from 'react';
 import styles from './PageDesigner.module.scss';
 import { IPageDesignerProps } from './IPageDesignerProps';
-import { DynamicNavigator, INavLinkClicked } from '../dynamicNavigator';
 import { FixedWebPartMappingEditor } from '../fixedWebPartMappingEditor';
 import { HeaderConfigEditor } from '../headerConfigEditor';
 import { MetadataMappingEditor } from '../metadataMappingEditor';
@@ -14,6 +13,7 @@ import IDataManagerProps from '../../services/IDataManagerProps';
 import IMappingFile from '../../services/dataProvider/IMappingFile';
 import { MappingsUtility } from '../../common/MappingUtility';
 import { INavigationReference } from '../../common';
+import { Nav, INavLink, INavLinkGroup } from 'office-ui-fabric-react/lib/Nav';
 
 /*
   This is the overarching component providing the frame for the entire tool.
@@ -35,7 +35,6 @@ export class PageDesigner extends React.Component<IPageDesignerProps, {}> {
 
     //TODO: Check to see if this is the best initialisation location
     this._loadMappings();
-    this._navLinkClicked = this._navLinkClicked.bind(this);
   }
 
 
@@ -53,13 +52,59 @@ export class PageDesigner extends React.Component<IPageDesignerProps, {}> {
     this._navigationReferences = MappingsUtility.AnalyseNavigationNodesInMapping(this._mappings);
   }
 
-  /**
-   *  Action to take when the navigation link is clicked
-   */
-  private _navLinkClicked(navLinkClicked: INavLinkClicked){
+  private _setupNavigation(navReferences: INavigationReference[]):INavLink[]{
 
+    let navLinks:INavLink[] = [];
+
+    if(navReferences !== null){
+      navReferences.forEach(navRef => {
+        let nav:INavLink;
+        nav = {
+          name: navRef.LayoutTitle,
+          url:'',
+          expandAriaLabel: 'Expand ' + navRef.LayoutTitle,
+          collapseAriaLabel: 'Collapse ' + navRef.LayoutTitle,
+          links: [
+            { name: 'Page Layout Configuration', url: '', key: 'PageLayoutConfig-' + navRef.LayoutId.toString() },
+          ]
+        };
+
+        //TODO: This could be improved perhaps move to calling code. Refine later.
+        if(navRef.HasHeaderConfig){
+          nav.links.push({ name: 'Header', url: '', key: navRef.HeaderNavLinkKey });
+        }
+
+        if(navRef.HasMetadataMappingConfig){
+          nav.links.push({ name: 'Metadata Mapping', url: '', key: navRef.MetadataNavLinkKey });
+        }
+
+        if(navRef.HasWebPartMappingConfig){
+          nav.links.push({ name: 'Web Part Mapping', url: '', key: navRef.WebPartMappingNavLinkKey });
+        }
+
+        if(navRef.HasWebPartZonesConfig){
+          nav.links.push({ name: 'Web Part Zones', url: '', key: navRef.WebPartZonesNavLinkKey });
+        }
+
+        if(navRef.HasFixedWebPartMapping){
+          nav.links.push({ name: 'Fixed Web Part Mapping', url: '', key: navRef.FixedWebPartNavLinkKey });
+        }
+        navLinks.push(nav);
+      });
+    }
+
+    return navLinks;
   }
 
+  private _onRenderGroupHeader(group: INavLinkGroup): JSX.Element {
+    return <h3>{group.name}</h3>;
+  }
+
+  private _onLinkClick(ev?: React.MouseEvent<HTMLElement, MouseEvent>, item?: INavLink): void{
+
+    // The item objecct is the same properties as the selected link e.g. item.name or item.key if in an array
+    // This needs to bubble up to parent control that a navigation link has been clicked.
+  }
 
   /**
    *  Render method for the component
@@ -70,7 +115,17 @@ export class PageDesigner extends React.Component<IPageDesignerProps, {}> {
       <div className={styles.pageDesigner}>
         <div className={styles.row}>
           <div className={styles.nav}>
-            <DynamicNavigator NavigationReferences= { this._navigationReferences } onNavClick={ this._navLinkClicked } />
+            <Nav
+              onRenderGroupHeader={this._onRenderGroupHeader}
+              ariaLabel="Page Layout Navigation with drop down groups"
+              onLinkClick={this._onLinkClick}
+              groups={[
+                {
+                  name: 'Layout Navigation',
+                  links: this._setupNavigation(this._navigationReferences)
+                }
+              ]}
+          />
           </div>
           <div className={styles.editorContainer}>
             Editor Container
