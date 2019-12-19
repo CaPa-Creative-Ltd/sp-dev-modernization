@@ -18,14 +18,30 @@ export class MappingsUtility {
     if(mappingFile !== null && mappingFile.PageLayouts !== null){
 
       mappingFile.PageLayouts.forEach(layout => {
+
+        let layoutTempId: string = Guid.newGuid().toString();
+
         let navRef: INavigationReference = {
           HasHeaderConfig: (layout.Header !== null),
+          HeaderNavLinkKey: "Header#;" + layoutTempId,
+
           HasMetadataMappingConfig: (layout.MetaDataMapping !== null),
+          MetadataNavLinkKey: "MetaData#;" + layoutTempId,
+
           HasWebPartMappingConfig: (layout.WebPartMappings !== null),
+          WebPartMappingNavLinkKey: "WebPartMapping#;" + layoutTempId,
+
           HasWebPartZonesConfig: (layout.WebPartZoneMappings !== null),
+          WebPartZonesNavLinkKey: "WebPartZones#;" + layoutTempId,
+
+          HasFixedWebPartMapping: (layout.FixedWebPartMappings !== null),
+          FixedWebPartNavLinkKey: "FixedWebPart#;" + layoutTempId,
+
           HasDesigner: (layout.WebPartMappings !== null || layout.WebPartZoneMappings !== null),
+          DesignerNavLinkKey: "Designer#;" + layoutTempId,
+
           LayoutTitle: layout.Name,
-          LayoutTempId: Guid.newGuid()
+          LayoutId: layoutTempId
         };
 
         navigationReferences.push(navRef);

@@ -24,10 +24,23 @@ export interface IProps {
 
 export interface INavigationReference{
   HasHeaderConfig: boolean;
+  HeaderNavLinkKey: string;
+
   HasMetadataMappingConfig: boolean;
+  MetadataNavLinkKey: string;
+
   HasWebPartMappingConfig: boolean;
+  WebPartMappingNavLinkKey: string;
+
   HasWebPartZonesConfig: boolean;
+  WebPartZonesNavLinkKey: string;
+
   HasDesigner:boolean;
+  DesignerNavLinkKey:string;
+
+  HasFixedWebPartMapping:boolean;
+  FixedWebPartNavLinkKey: string;
+
   LayoutTitle:string;
-  LayoutTempId:Guid;
+  LayoutId:string;
 }

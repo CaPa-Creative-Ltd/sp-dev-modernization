@@ -20,6 +20,8 @@ export class DynamicNavigator extends React.Component<IDynamicNavigatorProps, ID
   constructor(props: IDynamicNavigatorProps) {
     super(props);
 
+
+
     //initialise state
     this.state = {
 
@@ -40,49 +42,29 @@ export class DynamicNavigator extends React.Component<IDynamicNavigatorProps, ID
           expandAriaLabel: 'Expand ' + navRef.LayoutTitle,
           collapseAriaLabel: 'Collapse ' + navRef.LayoutTitle,
           links: [
-            { name: 'Page Layout Configuration', url: '', key: 'PageLayoutConfig-' + navRef.LayoutTempId.toString() },
+            { name: 'Page Layout Configuration', url: '', key: 'PageLayoutConfig-' + navRef.LayoutId.toString() },
           ]
         };
 
-        //TODO: Make names constants
+        //TODO: This could be improved perhaps move to calling code. Refine later.
         if(navRef.HasHeaderConfig){
-          nav.links.push({
-            name: 'Header',
-            url: '',
-            key: 'Header-' + navRef.LayoutTempId.toString()
-          });
+          nav.links.push({ name: 'Header', url: '', key: navRef.HeaderNavLinkKey });
         }
 
         if(navRef.HasMetadataMappingConfig){
-          nav.links.push({
-            name: 'Metadata Mapping',
-            url: '',
-            key: 'MetadataMapping-' + navRef.LayoutTempId.toString()
-          });
+          nav.links.push({ name: 'Metadata Mapping', url: '', key: navRef.MetadataNavLinkKey });
         }
 
         if(navRef.HasWebPartMappingConfig){
-          nav.links.push({
-            name: 'Web Part Mapping',
-            url: '',
-            key: 'WebPartMapping-' + navRef.LayoutTempId.toString()
-          });
+          nav.links.push({ name: 'Web Part Mapping', url: '', key: navRef.WebPartMappingNavLinkKey });
         }
 
         if(navRef.HasWebPartZonesConfig){
-          nav.links.push({
-            name: 'Web Part Zones',
-            url: '',
-            key: 'WebPartZones-' + navRef.LayoutTempId.toString()
-          });
+          nav.links.push({ name: 'Web Part Zones', url: '', key: navRef.WebPartZonesNavLinkKey });
         }
 
-        if(navRef.HasWebPartZonesConfig){
-          nav.links.push({
-            name: 'Fixed Web Part Mapping',
-            url: '',
-            key: 'FixedWebPartMapping-' + navRef.LayoutTempId.toString()
-          });
+        if(navRef.HasFixedWebPartMapping){
+          nav.links.push({ name: 'Fixed Web Part Mapping', url: '', key: navRef.FixedWebPartNavLinkKey });
         }
         navLinks.push(nav);
       });
@@ -99,6 +81,7 @@ export class DynamicNavigator extends React.Component<IDynamicNavigatorProps, ID
 
     // The item objecct is the same properties as the selected link e.g. item.name or item.key if in an array
     // This needs to bubble up to parent control that a navigation link has been clicked.
+    this.props.onNavClick({Key: item.key, LayoutId: item})
   }
 
   /**

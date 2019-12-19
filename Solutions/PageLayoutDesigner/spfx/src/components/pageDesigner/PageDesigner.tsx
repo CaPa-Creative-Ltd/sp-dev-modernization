@@ -1,7 +1,7 @@
 import * as React from 'react';
 import styles from './PageDesigner.module.scss';
 import { IPageDesignerProps } from './IPageDesignerProps';
-import { DynamicNavigator } from '../dynamicNavigator';
+import { DynamicNavigator, INavLinkClicked } from '../dynamicNavigator';
 import { FixedWebPartMappingEditor } from '../fixedWebPartMappingEditor';
 import { HeaderConfigEditor } from '../headerConfigEditor';
 import { MetadataMappingEditor } from '../metadataMappingEditor';
@@ -13,6 +13,7 @@ import DataManager from '../../services/DataManager';
 import IDataManagerProps from '../../services/IDataManagerProps';
 import IMappingFile from '../../services/dataProvider/IMappingFile';
 import { MappingsUtility } from '../../common/MappingUtility';
+import { INavigationReference } from '../../common';
 
 /*
   This is the overarching component providing the frame for the entire tool.
@@ -23,6 +24,7 @@ import { MappingsUtility } from '../../common/MappingUtility';
 export class PageDesigner extends React.Component<IPageDesignerProps, {}> {
 
   private _mappings: IMappingFile;
+  private _navigationReferences: INavigationReference[];
 
   /**
    * Constructor for the page designer class
@@ -32,14 +34,15 @@ export class PageDesigner extends React.Component<IPageDesignerProps, {}> {
     super(props);
 
     //TODO: Check to see if this is the best initialisation location
-    this.LoadMappings();
+    this._loadMappings();
+    this._navLinkClicked = this._navLinkClicked.bind(this);
   }
 
 
   /**
    *  Loads the mapping content
    */
-  private LoadMappings():void{
+  private _loadMappings():void{
 
     let dataManagerOptions: IDataManagerProps = {
       Context: this.props.Context
@@ -47,8 +50,15 @@ export class PageDesigner extends React.Component<IPageDesignerProps, {}> {
 
     let dataManager: DataManager = new DataManager(dataManagerOptions);
     this._mappings = dataManager.GetMappingFile();
+    this._navigationReferences = MappingsUtility.AnalyseNavigationNodesInMapping(this._mappings);
   }
 
+  /**
+   *  Action to take when the navigation link is clicked
+   */
+  private _navLinkClicked(navLinkClicked: INavLinkClicked){
+
+  }
 
 
   /**
@@ -60,7 +70,7 @@ export class PageDesigner extends React.Component<IPageDesignerProps, {}> {
       <div className={styles.pageDesigner}>
         <div className={styles.row}>
           <div className={styles.nav}>
-            <DynamicNavigator NavigationReferences= { MappingsUtility.AnalyseNavigationNodesInMapping(this._mappings) }  />
+            <DynamicNavigator NavigationReferences= { this._navigationReferences } onNavClick={ this._navLinkClicked } />
           </div>
           <div className={styles.editorContainer}>
             Editor Container
