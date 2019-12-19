@@ -71,7 +71,7 @@ export class PageDesigner extends React.Component<IPageDesignerProps, IPageDesig
           expandAriaLabel: 'Expand ' + navRef.LayoutTitle,
           collapseAriaLabel: 'Collapse ' + navRef.LayoutTitle,
           links: [
-            { name: 'Page Layout Configuration', url: '', key: 'PageLayoutConfig#;' + navRef.LayoutId },
+            { name: 'Page Layout Configuration', url: '', key: MappingsUtility.PAGELAYOUTCONFIG + MappingsUtility.NAVSPLITOKEN + navRef.LayoutId },
           ]
         };
 
@@ -106,13 +106,17 @@ export class PageDesigner extends React.Component<IPageDesignerProps, IPageDesig
     return <h3>{group.name}</h3>;
   }
 
-  private _onLinkClick(ev?: React.MouseEvent<HTMLElement, MouseEvent>, item?: INavLink): void{
+  private _onLinkClick  = (ev?: React.MouseEvent<HTMLElement, MouseEvent>, item?: INavLink) => {
 
     // The item objecct is the same properties as the selected link e.g. item.name or item.key if in an array
     // This needs to bubble up to parent control that a navigation link has been clicked.
     let name:string = MappingsUtility.GetNameFromNavLinkKey(item.key);
     let layoutId: string = MappingsUtility.GetLayoutIdFromNavLinkKey(item.key);
 
+    this.setState({
+      selectedLayoutId: layoutId,
+      selectedLinkName: name
+    });
 
   }
 
@@ -121,6 +125,7 @@ export class PageDesigner extends React.Component<IPageDesignerProps, IPageDesig
    */
   public render(): React.ReactElement<IPageDesignerProps> {
     //TODO: Look at navigation or router components
+    //TODO: Change to Switch statement and add default test when no nav selected
     return (
       <div className={styles.pageDesigner}>
         <div className={styles.row}>
@@ -140,13 +145,14 @@ export class PageDesigner extends React.Component<IPageDesignerProps, IPageDesig
           <div className={styles.editorContainer}>
             Editor Container
 
-            <HeaderConfigEditor />
-            <MetadataMappingEditor />
-            <FixedWebPartMappingEditor />
-            <VisualDesigner />
-            <PageLayoutConfigEditor />
-            <WebPartMappingEditor />
-            <WebPartZoneMappingEditor />
+
+            {(this.state.selectedLinkName === MappingsUtility.HEADER) && <HeaderConfigEditor /> }
+            {(this.state.selectedLinkName === MappingsUtility.METADATA) && <MetadataMappingEditor /> }
+            {(this.state.selectedLinkName === MappingsUtility.FIXEDWEBPART) && <FixedWebPartMappingEditor /> }
+            {(this.state.selectedLinkName === MappingsUtility.DESIGNER) && <VisualDesigner /> }
+            {(this.state.selectedLinkName === MappingsUtility.PAGELAYOUTCONFIG) && <PageLayoutConfigEditor /> }
+            {(this.state.selectedLinkName === MappingsUtility.WEBPARTMAPPING) && <WebPartMappingEditor /> }
+            {(this.state.selectedLinkName === MappingsUtility.WEBPARTZONES) && <WebPartZoneMappingEditor /> }
           </div>
         </div>
       </div>

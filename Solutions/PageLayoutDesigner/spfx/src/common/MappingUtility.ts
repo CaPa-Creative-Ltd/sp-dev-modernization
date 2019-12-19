@@ -13,6 +13,7 @@ export class MappingsUtility {
   public static WEBPARTZONES: string = "WebPartZones";
   public static FIXEDWEBPART: string = "FixedWebPart";
   public static DESIGNER:string = "Designer";
+  public static PAGELAYOUTCONFIG:string = "PageLayoutConfig";
 
   /**
    *
