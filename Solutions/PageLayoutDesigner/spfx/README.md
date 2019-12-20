@@ -42,3 +42,17 @@ https://www.npmjs.com/package/react-redux
 ## Code Used from following projects
 
 https://github.com/SharePoint/sp-dev-fx-controls-react
+
+## Community Resources
+
+https://www.reactiflux.com/
+
+## Candidate Grid Drag and Drop Systems for React
+
+https://github.com/strml/react-grid-layout
+https://strml.github.io/react-grid-layout/examples/14-toolbox.html
+
+https://github.com/react-dnd/react-dnd/
+https://react-dnd.github.io/react-dnd
+
+"@ms/sp-canvas": "~2.5.0",
