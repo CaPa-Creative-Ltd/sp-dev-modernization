@@ -1,4 +1,5 @@
-﻿using Microsoft.SharePoint.Client;
+﻿using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.SharePoint.Client;
 using Newtonsoft.Json;
 using OfficeDevPnP.Core.Pages;
 using SharePointPnP.Modernization.Framework.Entities;
@@ -24,26 +25,35 @@ namespace SharePointPnP.Modernization.Framework.Cache
     public sealed class CacheManager
     {
         private static readonly Lazy<CacheManager> _lazyInstance = new Lazy<CacheManager>(() => new CacheManager());
+        // baseTemplate will be loaded from local assembly and will be the same for any "caller"
         private OfficeDevPnP.Core.Framework.Provisioning.Model.ProvisioningTemplate baseTemplate;
-        private ConcurrentDictionary<string, List<ClientSideComponent>> clientSideComponents;
-        private ConcurrentDictionary<Guid, string> siteToComponentMapping;
-        private ConcurrentDictionary<string, List<FieldData>> fieldsToCopy;
-        private ConcurrentDictionary<uint, string> publishingPagesLibraryNames;
-        private ConcurrentDictionary<uint, string> blogListNames;
-        private ConcurrentDictionary<string, string> webType;
-        private ConcurrentDictionary<string, Dictionary<uint, string>> resourceStrings;
-        private ConcurrentDictionary<string, PageLayout> generatedPageLayoutMappings;
-        private ConcurrentDictionary<string, Dictionary<int, UserEntity>> userJsonStrings;
-        private ConcurrentDictionary<string, Dictionary<string, UserEntity>> userJsonStringsViaUpn;
-        private ConcurrentDictionary<string, Dictionary<string, ResolvedUser>> ensuredUsers;
-        private ConcurrentDictionary<string, string> contentTypes;
-        private ConcurrentDictionary<string, List<FieldData>> publishingContentTypeFields;
+        // Needs to be refactored together with the logging system
         private BasePageTransformator lastUsedTransformator;
-        private List<UrlMapping> urlMapping;
-        private List<UserMappingEntity> userMappings;
 
         private static readonly string Publishing = "publishing";
         private static readonly string Blog = "blog";
+
+        // Cache keys
+        private static readonly string keyAadTenantId = "aadTenantId";
+        private static readonly string keySharePointVersions = "sharepointVersions";
+        private static readonly string keyExactSharepointVersions = "exactSharepointVersions";
+        private static readonly string keyAssetsTransferred = "assetsTransferred";
+        private static readonly string keyClientSideComponents = "clientSideComponents";
+        private static readonly string keySiteToComponentMapping = "siteToComponentMapping";
+        private static readonly string keyFieldsToCopy = "fieldsToCopy";
+        private static readonly string keyPublishingPagesLibraryNames = "publishingPagesLibraryNames";
+        private static readonly string keyBlogListNames = "blogListNames";
+        private static readonly string keyWebType = "webType";
+        private static readonly string keyResourceStrings = "resourceStrings";
+        private static readonly string keyGeneratedPageLayoutMappings = "generatedPageLayoutMappings";
+        private static readonly string keyUserJsonStrings = "userJsonStrings";
+        private static readonly string keyUserJsonStringsViaUpn = "userJsonStringsViaUpn";
+        private static readonly string keyEnsuredUsers = "ensuredUsers";
+        private static readonly string keyContentTypes = "contentTypes";
+        private static readonly string keyPublishingContentTypeFields = "publishingContentTypeFields";
+        private static readonly string keyUrlMapping = "urlMapping";
+        private static readonly string keyUserMappings = "userMappings";
+        private static readonly string keyMappedUsers = "mappedUsers";
 
         /// <summary>
         /// Get's the single cachemanager instance, singleton pattern
@@ -59,49 +69,135 @@ namespace SharePointPnP.Modernization.Framework.Cache
         #region Construction
         private CacheManager()
         {
+            // setup default cache store
+            var defaultCacheOptions = new CacheOptions();
+            this.Store = new MemoryDistributedCache(defaultCacheOptions);
+            this.StoreOptions = defaultCacheOptions;
+
             // place for instance initialization code
-            clientSideComponents = new ConcurrentDictionary<string, List<ClientSideComponent>>();
-            siteToComponentMapping = new ConcurrentDictionary<Guid, string>();
             baseTemplate = null;
-            fieldsToCopy = new ConcurrentDictionary<string, List<FieldData>>();
-            AssetsTransfered = new List<AssetTransferredEntity>();
-            publishingPagesLibraryNames = new ConcurrentDictionary<uint, string>();
-            blogListNames = new ConcurrentDictionary<uint, string>();
-            webType = new ConcurrentDictionary<string, string>();
-            resourceStrings = new ConcurrentDictionary<string, Dictionary<uint, string>>();
-            generatedPageLayoutMappings = new ConcurrentDictionary<string, PageLayout>();
-            userJsonStrings = new ConcurrentDictionary<string, Dictionary<int, UserEntity>>();
-            userJsonStringsViaUpn = new ConcurrentDictionary<string, Dictionary<string, UserEntity>>();
-            ensuredUsers = new ConcurrentDictionary<string, Dictionary<string, ResolvedUser>>();
-            MappedUsers = new Dictionary<string, string>();
-            contentTypes = new ConcurrentDictionary<string, string>();
-            publishingContentTypeFields = new ConcurrentDictionary<string, List<FieldData>>();
-            SharepointVersions = new ConcurrentDictionary<Uri, SPVersion>();
-            ExactSharepointVersions = new ConcurrentDictionary<Uri, string>();
-            AADTenantId = new ConcurrentDictionary<Uri, Guid>();
         }
         #endregion
 
+        #region Cache implementation setup
+        public IDistributedCache Store { get; set; }
+        public ICacheOptions StoreOptions { get; set; }
+        #endregion
+
+        #region SharePoint Versions and AAD
         /// <summary>
-        /// List of URLs and SharePoint Versions
+        /// Get's the cached SharePoint version for a given site
         /// </summary>
-        public ConcurrentDictionary<Uri, SPVersion> SharepointVersions { get; }
+        /// <param name="site">Site to get the SharePoint version for</param>
+        /// <returns>Found SharePoint version or "Unknown" if not found in cache</returns>
+        public SPVersion GetSharePointVersion(Uri site)
+        {
+            var sharepointVersions = Store.GetAndInitialize<ConcurrentDictionary<Uri, SPVersion>>(StoreOptions.GetKey(keySharePointVersions));
+            if (sharepointVersions.ContainsKey(site))
+            {
+                return sharepointVersions[site];
+            }
+
+            return SPVersion.Unknown;
+        }
 
         /// <summary>
-        /// List of URLs and Exact SharePoint Versions
+        /// Sets the SharePoint version in cache
         /// </summary>
-        public ConcurrentDictionary<Uri, string> ExactSharepointVersions { get; }
+        /// <param name="site">Site to the set the SharePoint version for</param>
+        /// <param name="version">SharePoint version of the site</param>
+        public void SetSharePointVersion(Uri site, SPVersion version)
+        {
+            var sharepointVersions = Store.GetAndInitialize<ConcurrentDictionary<Uri, SPVersion>>(StoreOptions.GetKey(keySharePointVersions));
+            if (!sharepointVersions.ContainsKey(site))
+            {
+                sharepointVersions.TryAdd(site, version);
+                Store.Set<ConcurrentDictionary<Uri, SPVersion>>(StoreOptions.GetKey(keySharePointVersions), sharepointVersions, StoreOptions.EntryOptions);
+            }
+        }
 
         /// <summary>
-        /// AADTenantID's used
+        /// Get's the exact SharePoint version from cache
         /// </summary>
-        public ConcurrentDictionary<Uri, Guid> AADTenantId { get; }
+        /// <param name="site">Site to get the exact version for</param>
+        /// <returns>Exact version from cache</returns>
+        public string GetExactSharePointVersion(Uri site)
+        {
+            var exactSharepointVersions = Store.GetAndInitialize<ConcurrentDictionary<Uri, string>>(StoreOptions.GetKey(keyExactSharepointVersions));
+            if (exactSharepointVersions.ContainsKey(site))
+            {
+                return exactSharepointVersions[site];
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Adds exact SharePoint version for a given site to cache
+        /// </summary>
+        /// <param name="site">Site to add the SharePoint version for to cache</param>
+        /// <param name="version">Version to add</param>
+        public void SetExactSharePointVersion(Uri site, string version)
+        {
+            var exactSharepointVersions = Store.GetAndInitialize<ConcurrentDictionary<Uri, string>>(StoreOptions.GetKey(keyExactSharepointVersions));
+            if (!exactSharepointVersions.ContainsKey(site))
+            {
+                exactSharepointVersions.TryAdd(site, version);
+                Store.Set<ConcurrentDictionary<Uri, string>>(StoreOptions.GetKey(keyExactSharepointVersions), exactSharepointVersions, StoreOptions.EntryOptions);
+            }
+        }
+
+        /// <summary>
+        /// Returns the used AzureAD tenant id
+        /// </summary>
+        /// <param name="site">Url of the site</param>
+        /// <returns>Azure AD tenant id</returns>
+        public Guid GetAADTenantId(Uri site)
+        {
+            var aadTenantId = Store.GetAndInitialize<ConcurrentDictionary<Uri, Guid>>(StoreOptions.GetKey(keyAadTenantId));
+
+            if (aadTenantId.ContainsKey(site))
+            {
+                return aadTenantId[site];
+            }
+            else
+            {
+                return Guid.Empty;
+            }
+        }
+
+        /// <summary>
+        /// Sets the Azure AD tenant Id in cache
+        /// </summary>
+        /// <param name="tenantId">Tenant Id</param>
+        /// <param name="site">Site url</param>
+        public void SetAADTenantId(Guid tenantId, Uri site)
+        {
+            var aadTenantId = Store.GetAndInitialize<ConcurrentDictionary<Uri, Guid>>(StoreOptions.GetKey(keyAadTenantId));
+            
+            if (!aadTenantId.ContainsKey(site))
+            {
+                aadTenantId.TryAdd(site, tenantId);
+                Store.Set<ConcurrentDictionary<Uri, Guid>>(StoreOptions.GetKey(keyAadTenantId), aadTenantId, StoreOptions.EntryOptions);
+            }
+        }
+        #endregion
 
         #region Asset Transfer
-        /// <summary>
-        /// List of assets transferred from source to destination
-        /// </summary>
-        public List<AssetTransferredEntity> AssetsTransfered { get; set; }
+        public List<AssetTransferredEntity> GetAssetsTransferred()
+        {
+            return Store.GetAndInitialize<List<AssetTransferredEntity>>(StoreOptions.GetKey(keyAssetsTransferred));
+        }
+
+        public void AddAssetTransferredEntity(AssetTransferredEntity asset)
+        {
+            var assetsTransferred = Store.GetAndInitialize<List<AssetTransferredEntity>>(StoreOptions.GetKey(keyAssetsTransferred)); 
+            if (!assetsTransferred.Contains(asset))
+            {
+                assetsTransferred.Add(asset);
+                Store.Set<List<AssetTransferredEntity>>(StoreOptions.GetKey(keyAssetsTransferred), assetsTransferred, StoreOptions.EntryOptions);
+            }
+        }
         #endregion
 
         #region Client Side Components
@@ -114,14 +210,17 @@ namespace SharePointPnP.Modernization.Framework.Cache
         {
             Guid webId = page.Context.Web.EnsureProperty(o => o.Id);
 
+            var siteToComponentMapping = Store.GetAndInitialize<ConcurrentDictionary<Guid, string>>(StoreOptions.GetKey(keySiteToComponentMapping));
+
             if (siteToComponentMapping.ContainsKey(webId))
             {
                 // Components are cached for this site, get the component key
                 if (siteToComponentMapping.TryGetValue(webId, out string componentKey))
                 {
-                    if (clientSideComponents.TryGetValue(componentKey, out List<ClientSideComponent> componentList))
+                    var clientSideComponents = Store.GetAndInitialize<ConcurrentDictionary<string, string>>(StoreOptions.GetKey(keyClientSideComponents));
+                    if (clientSideComponents.TryGetValue(componentKey, out string componentList))
                     {
-                        return componentList;
+                        return JsonConvert.DeserializeObject<List<ClientSideComponent>>(componentList);
                     }
                 }
             }
@@ -130,15 +229,20 @@ namespace SharePointPnP.Modernization.Framework.Cache
             var componentsToAdd = page.AvailableClientSideComponents().ToList();
 
             // calculate the componentkey
-            string componentKeyToCache = Sha256(JsonConvert.SerializeObject(componentsToAdd));
+            string jsonComponentsToAdd = JsonConvert.SerializeObject(componentsToAdd);
+            string componentKeyToCache = Sha256(jsonComponentsToAdd);
 
             // store the retrieved data in cache
             if (siteToComponentMapping.TryAdd(webId, componentKeyToCache))
             {
+                Store.Set<ConcurrentDictionary<Guid, string>>(StoreOptions.GetKey(keySiteToComponentMapping), siteToComponentMapping, StoreOptions.EntryOptions);
+
                 // Since the components list is big and often the same across webs we only store it in cache if it's different
+                var clientSideComponents = Store.GetAndInitialize<ConcurrentDictionary<string, string>>(StoreOptions.GetKey(keyClientSideComponents));
                 if (!clientSideComponents.ContainsKey(componentKeyToCache))
                 {
-                    clientSideComponents.TryAdd(componentKeyToCache, componentsToAdd);
+                    clientSideComponents.TryAdd(componentKeyToCache, jsonComponentsToAdd);
+                    Store.Set<ConcurrentDictionary<string, string>>(StoreOptions.GetKey(keyClientSideComponents), clientSideComponents, StoreOptions.EntryOptions);
                 }
             }
 
@@ -150,8 +254,8 @@ namespace SharePointPnP.Modernization.Framework.Cache
         /// </summary>
         public void ClearClientSideComponents()
         {
-            clientSideComponents.Clear();
-            siteToComponentMapping.Clear();
+            Store.Remove(StoreOptions.GetKey(keyClientSideComponents));
+            Store.Remove(StoreOptions.GetKey(keySiteToComponentMapping));
         }
         #endregion
 
@@ -205,6 +309,8 @@ namespace SharePointPnP.Modernization.Framework.Cache
         {
             List<FieldData> fieldsToCopyRetrieved = new List<FieldData>();
 
+            var fieldsToCopy = Store.GetAndInitialize<ConcurrentDictionary<string, List<FieldData>>>(StoreOptions.GetKey(keyFieldsToCopy));
+
             // Did we already do the calculation for this sitepages library? If so then return from cache
             if (fieldsToCopy.ContainsKey(sourceLibrary.Id.ToString()))
             {
@@ -249,6 +355,7 @@ namespace SharePointPnP.Modernization.Framework.Cache
                     // Add to cache
                     if (fieldsToCopy.TryAdd(sourceLibrary.Id.ToString(), fieldsToCopyRetrieved))
                     {
+                        Store.Set<ConcurrentDictionary<string, List<FieldData>>>(StoreOptions.GetKey(keyFieldsToCopy), fieldsToCopy, StoreOptions.EntryOptions);
                         return fieldsToCopyRetrieved;
                     }
                 }
@@ -268,7 +375,8 @@ namespace SharePointPnP.Modernization.Framework.Cache
         public FieldData GetPublishingContentTypeField(List pagesLibrary, string contentTypeId, string fieldName)
         {
             // Try to get from cache
-            if (this.publishingContentTypeFields.TryGetValue(contentTypeId, out List<FieldData> fieldsFromCache))
+            var publishingContentTypeFields = Store.GetAndInitialize<ConcurrentDictionary<string, List<FieldData>>>(StoreOptions.GetKey(keyPublishingContentTypeFields));
+            if (publishingContentTypeFields.TryGetValue(contentTypeId, out List<FieldData> fieldsFromCache))
             {
                 // return field if found
                 return fieldsFromCache.Where(p => p.FieldName.Equals(fieldName, StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
@@ -317,7 +425,8 @@ namespace SharePointPnP.Modernization.Framework.Cache
             }
 
             // Store in cache
-            this.publishingContentTypeFields.TryAdd(contentTypeId, contentTypeFieldsInList);
+            publishingContentTypeFields.TryAdd(contentTypeId, contentTypeFieldsInList);
+            Store.Set<ConcurrentDictionary<string, List<FieldData>>>(StoreOptions.GetKey(keyPublishingContentTypeFields), publishingContentTypeFields, StoreOptions.EntryOptions);
 
             // Return field, if found
             return contentTypeFieldsInList.Where(p => p.FieldName.Equals(fieldName, StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
@@ -328,8 +437,8 @@ namespace SharePointPnP.Modernization.Framework.Cache
         /// </summary>
         public void ClearFieldsToCopy()
         {
-            this.fieldsToCopy.Clear();
-            this.publishingContentTypeFields.Clear();
+            Store.Remove(StoreOptions.GetKey(keyFieldsToCopy));
+            Store.Remove(StoreOptions.GetKey(keyPublishingContentTypeFields));
         }
 
         #endregion
@@ -341,9 +450,12 @@ namespace SharePointPnP.Modernization.Framework.Cache
         /// <param name="webUrl">Url of the web</param>
         public void SetPublishingWeb(string webUrl)
         {
-            if (!this.webType.ContainsKey(webUrl))
+            var webType = Store.GetAndInitialize<ConcurrentDictionary<string, string>>(StoreOptions.GetKey(keyWebType));
+
+            if (!webType.ContainsKey(webUrl))
             {
-                this.webType.TryAdd(webUrl, CacheManager.Publishing);
+                webType.TryAdd(webUrl, CacheManager.Publishing);
+                Store.Set<ConcurrentDictionary<string, string>>(StoreOptions.GetKey(keyWebType), webType, StoreOptions.EntryOptions);
             }
         }
 
@@ -353,9 +465,11 @@ namespace SharePointPnP.Modernization.Framework.Cache
         /// <param name="webUrl">Url of the web</param>
         public void SetBlogWeb(string webUrl)
         {
-            if (!this.webType.ContainsKey(webUrl))
+            var webType = Store.GetAndInitialize<ConcurrentDictionary<string, string>>(StoreOptions.GetKey(keyWebType));
+            if (!webType.ContainsKey(webUrl))
             {
-                this.webType.TryAdd(webUrl, CacheManager.Blog);
+                webType.TryAdd(webUrl, CacheManager.Blog);
+                Store.Set<ConcurrentDictionary<string, string>>(StoreOptions.GetKey(keyWebType), webType, StoreOptions.EntryOptions);
             }
         }
 
@@ -366,9 +480,10 @@ namespace SharePointPnP.Modernization.Framework.Cache
         /// <returns>True if publishing, false otherwise</returns>
         public bool IsPublishingWeb(string webUrl)
         {
-            if (this.webType.ContainsKey(webUrl))
+            var webType = Store.GetAndInitialize<ConcurrentDictionary<string, string>>(StoreOptions.GetKey(keyWebType));
+            if (webType.ContainsKey(webUrl))
             {
-                if (this.webType.TryGetValue(webUrl, out string type))
+                if (webType.TryGetValue(webUrl, out string type))
                 {
                     if (type.Equals(CacheManager.Publishing))
                     {
@@ -387,9 +502,10 @@ namespace SharePointPnP.Modernization.Framework.Cache
         /// <returns>True if blog, false otherwise</returns>
         public bool IsBlogWeb(string webUrl)
         {
-            if (this.webType.ContainsKey(webUrl))
+            var webType = Store.GetAndInitialize<ConcurrentDictionary<string, string>>(StoreOptions.GetKey(keyWebType));
+            if (webType.ContainsKey(webUrl))
             {
-                if (this.webType.TryGetValue(webUrl, out string type))
+                if (webType.TryGetValue(webUrl, out string type))
                 {
                     if (type.Equals(CacheManager.Blog))
                     {
@@ -426,7 +542,8 @@ namespace SharePointPnP.Modernization.Framework.Cache
             uint lcid = context.Web.EnsureProperty(p => p.Language);
 
             var propertyBagKey = Constants.WebPropertyKeyPagesListId;
-
+            
+            var publishingPagesLibraryNames = Store.GetAndInitialize<ConcurrentDictionary<uint, string>>(StoreOptions.GetKey(keyPublishingPagesLibraryNames));
             if (publishingPagesLibraryNames.ContainsKey(lcid))
             {
                 if (publishingPagesLibraryNames.TryGetValue(lcid, out string name))
@@ -453,6 +570,7 @@ namespace SharePointPnP.Modernization.Framework.Cache
 
                         // add to cache
                         publishingPagesLibraryNames.TryAdd(lcid, pagesLibraryName);
+                        Store.Set<ConcurrentDictionary<uint, string>>(StoreOptions.GetKey(keyPublishingPagesLibraryNames), publishingPagesLibraryNames, StoreOptions.EntryOptions);
 
                         return pagesLibraryName;
                     }
@@ -472,6 +590,7 @@ namespace SharePointPnP.Modernization.Framework.Cache
 
                     // add to cache
                     publishingPagesLibraryNames.TryAdd(lcid, altPagesLibraryName.ToLower());
+                    Store.Set<ConcurrentDictionary<uint, string>>(StoreOptions.GetKey(keyPublishingPagesLibraryNames), publishingPagesLibraryNames, StoreOptions.EntryOptions);
 
                     return altPagesLibraryName.ToLower();
                 }
@@ -498,6 +617,8 @@ namespace SharePointPnP.Modernization.Framework.Cache
             }
 
             uint lcid = context.Web.EnsureProperty(p => p.Language);
+            var blogListNames = Store.GetAndInitialize<ConcurrentDictionary<uint, string>>(StoreOptions.GetKey(keyBlogListNames));
+
             if (blogListNames.ContainsKey(lcid))
             {
                 if (blogListNames.TryGetValue(lcid, out string name))
@@ -532,6 +653,7 @@ namespace SharePointPnP.Modernization.Framework.Cache
 
                 // add to cache
                 blogListNames.TryAdd(lcid, altBlogListName.ToLower());
+                Store.Set<ConcurrentDictionary<uint, string>>(StoreOptions.GetKey(keyBlogListNames), blogListNames, StoreOptions.EntryOptions);
 
                 return altBlogListName.ToLower();
             }
@@ -548,6 +670,8 @@ namespace SharePointPnP.Modernization.Framework.Cache
         public string GetResourceString(ClientContext context, string resource)
         {
             uint lcid = context.Web.EnsureProperty(p => p.Language);
+
+            var resourceStrings = Store.GetAndInitialize<ConcurrentDictionary<string, Dictionary<uint, string>>>(StoreOptions.GetKey(keyResourceStrings));
 
             if (resourceStrings.ContainsKey(resource))
             {
@@ -598,6 +722,7 @@ namespace SharePointPnP.Modernization.Framework.Cache
                             { lcid, result.Value }
                         };
                         resourceStrings.TryUpdate(resource, newResourceValues, resourceValues);
+                        Store.Set<ConcurrentDictionary<string, Dictionary<uint, string>>>(StoreOptions.GetKey(keyResourceStrings), resourceStrings, StoreOptions.EntryOptions);
                     }
                 }
             }
@@ -610,6 +735,7 @@ namespace SharePointPnP.Modernization.Framework.Cache
                 };
 
                 resourceStrings.TryAdd(resource, translations);
+                Store.Set<ConcurrentDictionary<string, Dictionary<uint, string>>>(StoreOptions.GetKey(keyResourceStrings), resourceStrings, StoreOptions.EntryOptions);
             }
 
             return result.Value;
@@ -627,6 +753,7 @@ namespace SharePointPnP.Modernization.Framework.Cache
             string key = page.PageLayoutFile();
 
             // Try get the page layout from cache
+            var generatedPageLayoutMappings = Store.GetAndInitialize<ConcurrentDictionary<string, PageLayout>>(StoreOptions.GetKey(keyGeneratedPageLayoutMappings));
             if (generatedPageLayoutMappings.TryGetValue(key, out PageLayout pageLayoutFromCache))
             {
                 return pageLayoutFromCache;
@@ -639,6 +766,7 @@ namespace SharePointPnP.Modernization.Framework.Cache
 
             // Add to cache for future reuse
             generatedPageLayoutMappings.TryAdd(key, newPageLayoutMapping);
+            Store.Set<ConcurrentDictionary<string, PageLayout>>(StoreOptions.GetKey(keyGeneratedPageLayoutMappings), generatedPageLayoutMappings, StoreOptions.EntryOptions);
 
             // Return to requestor
             return newPageLayoutMapping;
@@ -652,13 +780,14 @@ namespace SharePointPnP.Modernization.Framework.Cache
         /// </summary>
         public void ClearAllCaches()
         {
-            this.AssetsTransfered.Clear();
+            //this.assetsTransfered.Clear();
+            this.Store.Remove(StoreOptions.GetKey(keyAssetsTransferred));
             ClearClientSideComponents();
             ClearBaseTemplate();
 
-            this.urlMapping?.Clear();
-            this.userMappings?.Clear();
-            this.ensuredUsers?.Clear();
+            Store.Remove(StoreOptions.GetKey(keyUrlMapping));
+            Store.Remove(StoreOptions.GetKey(keyUserMappings));
+            Store.Remove(StoreOptions.GetKey(keyEnsuredUsers));
 
             ClearFieldsToCopy();
             ClearSharePointVersions();
@@ -670,7 +799,7 @@ namespace SharePointPnP.Modernization.Framework.Cache
         /// </summary>
         public void ClearSharePointVersions()
         {
-            this.SharepointVersions.Clear();
+            Store.Remove(StoreOptions.GetKey(keySharePointVersions));
         }
 
         /// <summary>
@@ -678,7 +807,7 @@ namespace SharePointPnP.Modernization.Framework.Cache
         /// </summary>
         public void ClearGeneratedPageLayoutMappings()
         {
-            this.generatedPageLayoutMappings.Clear();
+            Store.Remove(StoreOptions.GetKey(keyGeneratedPageLayoutMappings));
         }
 
         #endregion
@@ -687,7 +816,27 @@ namespace SharePointPnP.Modernization.Framework.Cache
         /// <summary>
         /// Mapped users
         /// </summary>
-        public Dictionary<string, string> MappedUsers { get; }
+        /// <returns>A dictionary of mapped users</returns>
+        public Dictionary<string, string> GetMappedUsers()
+        {
+            var mappedUsers = Store.GetAndInitialize<Dictionary<string, string>>(StoreOptions.GetKey(keyMappedUsers));
+            return mappedUsers;
+        }
+
+        /// <summary>
+        /// Adds a user to the dictionary of mapped users
+        /// </summary>
+        /// <param name="principal">Principal to map</param>
+        /// <param name="user">mapped user</param>
+        public void AddMappedUser(string principal, string user)
+        {
+            var mappedUsers = Store.GetAndInitialize<Dictionary<string, string>>(StoreOptions.GetKey(keyMappedUsers));
+            if (!mappedUsers.ContainsKey(principal))
+            {
+                mappedUsers.Add(principal, user);
+                Store.Set<Dictionary<string, string>>(StoreOptions.GetKey(keyMappedUsers), mappedUsers, StoreOptions.EntryOptions);
+            }
+        }
 
         /// <summary>
         /// Run and cache the output value of EnsureUser for a given user
@@ -704,7 +853,8 @@ namespace SharePointPnP.Modernization.Framework.Cache
 
             string key = context.Web.GetUrl();
 
-            if (this.ensuredUsers.TryGetValue(key, out Dictionary<string, ResolvedUser> ensuredUsersFromCache))
+            var ensuredUsers = Store.GetAndInitialize<ConcurrentDictionary<string, Dictionary<string, ResolvedUser>>>(StoreOptions.GetKey(keyEnsuredUsers));
+            if (ensuredUsers.TryGetValue(key, out Dictionary<string, ResolvedUser> ensuredUsersFromCache))
             {
                 if (ensuredUsersFromCache.TryGetValue(userValue, out ResolvedUser userLoginName))
                 {
@@ -735,7 +885,8 @@ namespace SharePointPnP.Modernization.Framework.Cache
                                 { userValue, resolvedUser }
                             };
 
-                        this.ensuredUsers.TryUpdate(key, newEnsuredUsersFromCache, ensuredUsersFromCache);
+                        ensuredUsers.TryUpdate(key, newEnsuredUsersFromCache, ensuredUsersFromCache);
+                        Store.Set<ConcurrentDictionary<string, Dictionary<string, ResolvedUser>>>(StoreOptions.GetKey(keyEnsuredUsers), ensuredUsers, StoreOptions.EntryOptions);
                     }
                     else
                     {
@@ -745,7 +896,8 @@ namespace SharePointPnP.Modernization.Framework.Cache
                                 { userValue, resolvedUser }
                             };
 
-                        this.ensuredUsers.TryAdd(key, newEnsuredUsersFromCache);
+                        ensuredUsers.TryAdd(key, newEnsuredUsersFromCache);
+                        Store.Set<ConcurrentDictionary<string, Dictionary<string, ResolvedUser>>>(StoreOptions.GetKey(keyEnsuredUsers), ensuredUsers, StoreOptions.EntryOptions);
                     }
 
                     return resolvedUser;
@@ -779,7 +931,8 @@ namespace SharePointPnP.Modernization.Framework.Cache
                 userUpn = $"i:0#.f|membership|{userUpn}";
             }
 
-            if (this.userJsonStringsViaUpn.TryGetValue(key, out Dictionary<string, UserEntity> userListFromCache))
+            var userJsonStringsViaUpn = Store.GetAndInitialize<ConcurrentDictionary<string, Dictionary<string, UserEntity>>>(StoreOptions.GetKey(keyUserJsonStringsViaUpn));
+            if (userJsonStringsViaUpn.TryGetValue(key, out Dictionary<string, UserEntity> userListFromCache))
             {
                 if (userListFromCache.TryGetValue(userUpn, out UserEntity userJsonFromCache))
                 {
@@ -844,7 +997,8 @@ namespace SharePointPnP.Modernization.Framework.Cache
                                 { userUpn, author }
                             };
 
-                            this.userJsonStringsViaUpn.TryUpdate(key, newUserListToCache, userListFromCache);
+                            userJsonStringsViaUpn.TryUpdate(key, newUserListToCache, userListFromCache);
+                            Store.Set<ConcurrentDictionary<string, Dictionary<string, UserEntity>>>(StoreOptions.GetKey(keyUserJsonStringsViaUpn), userJsonStringsViaUpn, StoreOptions.EntryOptions);
                         }
                         else
                         {
@@ -854,7 +1008,8 @@ namespace SharePointPnP.Modernization.Framework.Cache
                                 { userUpn, author }
                             };
 
-                            this.userJsonStringsViaUpn.TryAdd(key, newUserListToCache);
+                            userJsonStringsViaUpn.TryAdd(key, newUserListToCache);
+                            Store.Set<ConcurrentDictionary<string, Dictionary<string, UserEntity>>>(StoreOptions.GetKey(keyUserJsonStringsViaUpn), userJsonStringsViaUpn, StoreOptions.EntryOptions);
                         }
 
                         // return 
@@ -880,7 +1035,8 @@ namespace SharePointPnP.Modernization.Framework.Cache
         {
             string key = context.Web.GetUrl();
 
-            if (this.userJsonStrings.TryGetValue(key, out Dictionary<int, UserEntity> userListFromCache))
+            var userJsonStrings = Store.GetAndInitialize<ConcurrentDictionary<string, Dictionary<int, UserEntity>>>(StoreOptions.GetKey(keyUserJsonStrings));
+            if (userJsonStrings.TryGetValue(key, out Dictionary<int, UserEntity> userListFromCache))
             {
                 if (userListFromCache.TryGetValue(userListId, out UserEntity userJsonFromCache))
                 {
@@ -944,7 +1100,8 @@ namespace SharePointPnP.Modernization.Framework.Cache
                                 { userListId, author }
                             };
 
-                            this.userJsonStrings.TryUpdate(key, newUserListToCache, userListFromCache);
+                            userJsonStrings.TryUpdate(key, newUserListToCache, userListFromCache);
+                            Store.Set<ConcurrentDictionary<string, Dictionary<int, UserEntity>>>(StoreOptions.GetKey(keyUserJsonStrings), userJsonStrings, StoreOptions.EntryOptions);
                         }
                         else
                         {
@@ -954,7 +1111,8 @@ namespace SharePointPnP.Modernization.Framework.Cache
                                 { userListId, author }
                             };
 
-                            this.userJsonStrings.TryAdd(key, newUserListToCache);
+                            userJsonStrings.TryAdd(key, newUserListToCache);
+                            Store.Set<ConcurrentDictionary<string, Dictionary<int, UserEntity>>>(StoreOptions.GetKey(keyUserJsonStrings), userJsonStrings, StoreOptions.EntryOptions);
                         }
 
                         // return 
@@ -983,7 +1141,8 @@ namespace SharePointPnP.Modernization.Framework.Cache
             string contentTypeId = null;
 
             // try to get from cache
-            this.contentTypes.TryGetValue(contentTypeName, out string contentTypeIdFromCache);
+            var contentTypes = Store.GetAndInitialize<ConcurrentDictionary<string, string>>(StoreOptions.GetKey(keyContentTypes));
+            contentTypes.TryGetValue(contentTypeName, out string contentTypeIdFromCache);
             if (!string.IsNullOrEmpty(contentTypeIdFromCache))
             {
                 return contentTypeIdFromCache;
@@ -1005,7 +1164,8 @@ namespace SharePointPnP.Modernization.Framework.Cache
                 }
 
                 // add to cache
-                this.contentTypes.TryAdd(contentTypeName, contentTypeId);
+                contentTypes.TryAdd(contentTypeName, contentTypeId);
+                Store.Set<ConcurrentDictionary<string, string>>(StoreOptions.GetKey(keyContentTypes), contentTypes, StoreOptions.EntryOptions);
             }
 
             return contentTypeId;
@@ -1041,15 +1201,17 @@ namespace SharePointPnP.Modernization.Framework.Cache
         /// <returns>List of url mappings</returns>
         public List<UrlMapping> GetUrlMapping(string urlMappingFile, IList<ILogObserver> logObservers = null)
         {
-            if (this.urlMapping != null && this.urlMapping.Count > 0)
+            var urlMapping = Store.GetAndInitialize<List<UrlMapping>>(StoreOptions.GetKey(keyUrlMapping));
+            if (urlMapping != null && urlMapping.Count > 0)
             {
-                return this.urlMapping;
+                return urlMapping;
             }
 
             FileManager fileManager = new FileManager(logObservers);
-            this.urlMapping = fileManager.LoadUrlMappingFile(urlMappingFile);
+            urlMapping = fileManager.LoadUrlMappingFile(urlMappingFile);
+            Store.Set<List<UrlMapping>>(StoreOptions.GetKey(keyUrlMapping), urlMapping, StoreOptions.EntryOptions);
 
-            return this.urlMapping;
+            return urlMapping;
         }
         #endregion
 
@@ -1062,15 +1224,18 @@ namespace SharePointPnP.Modernization.Framework.Cache
         /// <returns>List of user mappings</returns>
         public List<UserMappingEntity> GetUserMapping(string userMappingFile, IList<ILogObserver> logObservers = null)
         {
-            if (this.userMappings != null && this.userMappings.Count > 0)
+            var userMappings = Store.GetAndInitialize<List<UserMappingEntity>>(StoreOptions.GetKey(keyUserMappings));
+            if (userMappings != null && userMappings.Count > 0)
             {
-                return this.userMappings;
+                return userMappings;
             }
 
             FileManager fileManager = new FileManager(logObservers);
-            this.userMappings = fileManager.LoadUserMappingFile(userMappingFile);
+            userMappings = fileManager.LoadUserMappingFile(userMappingFile);
 
-            return this.userMappings;
+            Store.Set<List<UserMappingEntity>>(StoreOptions.GetKey(keyUserMappings), userMappings, StoreOptions.EntryOptions);
+
+            return userMappings;
         }
         #endregion
 

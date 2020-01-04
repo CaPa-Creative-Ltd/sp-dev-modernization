@@ -15,6 +15,10 @@ using SharePoint.Modernization.Scanner.Core.Workflow;
 using OfficeDevPnP.Core.Framework.Graph;
 using Newtonsoft.Json.Linq;
 using SharePointPnP.Modernization.Scanner.Core.Analyzers;
+using SharePointPnP.Modernization.Scanner.Core;
+using Microsoft.Extensions.Caching.Distributed;
+using SharePointPnP.Modernization.Framework.Cache;
+using System.Net;
 
 namespace SharePoint.Modernization.Scanner.Core
 {
@@ -28,6 +32,9 @@ namespace SharePoint.Modernization.Scanner.Core
         private readonly string EuropeDateFormat = "d/M/yyyy";
         private Options options;
         private static volatile bool delveBlogsDone = false;
+        private static readonly string keyGroupsList = "keyGroupsList";
+        private static readonly string keyRealm = "keyRealm";
+        private static readonly string keyTenantRealm = "keyTenantRealm";
 
         internal AppOnlyManager AppOnlyManager;
 
@@ -56,6 +63,9 @@ namespace SharePoint.Modernization.Scanner.Core
         public Tenant SPOTenant;
         public PageTransformation PageTransformation;
         public ScannerTelemetry ScannerTelemetry;
+
+        public IDistributedCache Store { get; set; }
+        public ICacheOptions StoreOptions { get; set; }
         #endregion
 
         #region Construction
@@ -63,9 +73,22 @@ namespace SharePoint.Modernization.Scanner.Core
         /// Instantiate the scanner
         /// </summary>
         /// <param name="options">Options instance</param>
-        public ModernizationScanJob(Options options) : base(options, "ModernizationScanner", "1.0")
+        public ModernizationScanJob(Options options, IDistributedCache store, ICacheOptions storeOptions) : base(options, "ModernizationScanner", "1.0")
         {
             this.options = options;
+
+            // setup default cache store
+            if (store == null)
+            {
+                var defaultCacheOptions = new CacheOptions();
+                this.Store = new MemoryDistributedCache(defaultCacheOptions);
+                this.StoreOptions = defaultCacheOptions;
+            }
+            else
+            {
+                this.Store = store;
+                this.StoreOptions = storeOptions;
+            }
 
             ExpandSubSites = false;
             Mode = options.Mode;
@@ -87,7 +110,7 @@ namespace SharePoint.Modernization.Scanner.Core
                 DateFormat = USDateFormat;
             }
 
-            this.AppOnlyManager = new AppOnlyManager();
+            this.AppOnlyManager = new AppOnlyManager(this.Store, this.StoreOptions);
 
             // Scan results
             this.SiteScanResults = new ConcurrentDictionary<string, SiteScanResult>(options.Threads, 10000);
@@ -135,7 +158,7 @@ namespace SharePoint.Modernization.Scanner.Core
                     SiteColUrl = e.Url
                 };
                 this.ScanErrors.Push(error);
-                Console.WriteLine("Error for site {1}: {0}", "No valid ClientContext objects", e.Url);
+                Log($"Error for site {e.Url}: No valid ClientContext objects", LogSeverity.Error);
 
                 // bail out
                 return;
@@ -171,7 +194,7 @@ namespace SharePoint.Modernization.Scanner.Core
                         // Clone the existing ClientContext for the sub web
                         using (ClientContext ccWeb = e.SiteClientContext.Clone(site))
                         {
-                            Console.WriteLine("Processing site {0}...", site);
+                            Log($"Processing site {site}...");
 
                             // Allow max server time out, might be needed for sites having a lot of users
                             ccWeb.RequestTimeout = Timeout.Infinite;
@@ -260,7 +283,7 @@ namespace SharePoint.Modernization.Scanner.Core
                         }
 
                         this.ScanErrors.Push(error);
-                        Console.WriteLine("Error for site {1}: {0}", ex.Message, site);
+                        Log($"Error for site {site}: {ex.Message}", LogSeverity.Error);
                     }
                 }
             }
@@ -282,18 +305,18 @@ namespace SharePoint.Modernization.Scanner.Core
                 }
 
                 this.ScanErrors.Push(error);
-                Console.WriteLine("Error for site {1}: {0}", ex.Message, e.Url);
+                Log($"Error for site {e.Url}: {ex.Message}", LogSeverity.Error);
             }
 
             // Output the scanning progress
             try
             {
                 TimeSpan ts = DateTime.Now.Subtract(this.StartTime);
-                Console.WriteLine($"Thread: {Thread.CurrentThread.ManagedThreadId}. Processed {this.ScannedSites} of {this.SitesToScan} site collections ({Math.Round(((float)this.ScannedSites / (float)this.SitesToScan) * 100)}%). Process running for {ts.Days} days, {ts.Hours} hours, {ts.Minutes} minutes and {ts.Seconds} seconds.");
+                Log($"Thread: {Thread.CurrentThread.ManagedThreadId}. Processed {this.ScannedSites} of {this.SitesToScan} site collections ({Math.Round(((float)this.ScannedSites / (float)this.SitesToScan) * 100)}%). Process running for {ts.Days} days, {ts.Hours} hours, {ts.Minutes} minutes and {ts.Seconds} seconds.");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error showing progress: {ex.ToString()}");
+                Log($"Error showing progress: {ex.ToString()}", LogSeverity.Error);
             }
 
         }
@@ -393,22 +416,34 @@ namespace SharePoint.Modernization.Scanner.Core
                 // Create list of Teamified site collections
                 try
                 {
-                    var accessToken = AppOnlyManager.GetGraphAccessToken(this.options);
+                    var groupsList = this.Store.Get<List<Guid>>(this.StoreOptions.GetKey(keyGroupsList));
 
-                    if (!string.IsNullOrEmpty(accessToken))
+                    if (groupsList != null)
                     {
-                        string getGroupsWithATeamsTeam = $"{GraphHttpClient.MicrosoftGraphBetaBaseUri}groups?$filter=resourceProvisioningOptions/Any(x:x eq 'Team')&select=id,resourceProvisioningOptions";
+                        this.TeamifiedSiteCollections.Clear();
+                        this.TeamifiedSiteCollections.AddRange(groupsList);
+                    }
+                    else
+                    {
+                        var accessToken = AppOnlyManager.GetGraphAccessToken(this.options);
 
-                        var getGroupResult = GraphHttpClient.MakeGetRequestForString(
-                            getGroupsWithATeamsTeam,
-                            accessToken: accessToken);
-
-                        JObject groupObject = JObject.Parse(getGroupResult);
-
-                        this.TeamifiedSiteCollectionsLoaded = true;
-                        foreach (var item in groupObject["value"])
+                        if (!string.IsNullOrEmpty(accessToken))
                         {
-                            this.TeamifiedSiteCollections.Add(new Guid(item["id"].ToString()));
+                            string getGroupsWithATeamsTeam = $"{GraphHttpClient.MicrosoftGraphBetaBaseUri}groups?$filter=resourceProvisioningOptions/Any(x:x eq 'Team')&select=id,resourceProvisioningOptions";
+
+                            var getGroupResult = GraphHttpClient.MakeGetRequestForString(
+                                getGroupsWithATeamsTeam,
+                                accessToken: accessToken);
+
+                            JObject groupObject = JObject.Parse(getGroupResult);
+
+                            this.TeamifiedSiteCollectionsLoaded = true;
+                            foreach (var item in groupObject["value"])
+                            {
+                                this.TeamifiedSiteCollections.Add(new Guid(item["id"].ToString()));
+                            }
+
+                            this.Store.Set<List<Guid>>(this.StoreOptions.GetKey(keyGroupsList), this.TeamifiedSiteCollections, this.StoreOptions.EntryOptions);
                         }
                     }
                 }
@@ -975,9 +1010,9 @@ namespace SharePoint.Modernization.Scanner.Core
 
             VersionWarning();
 
-            Console.WriteLine("=====================================================");
-            Console.WriteLine("All done. Took {0} for {1} sites", (DateTime.Now - start).ToString(), this.ScannedSites);
-            Console.WriteLine("=====================================================");
+            Log("=====================================================");
+            Log($"All done. Took {(DateTime.Now - start).ToString()} for {this.ScannedSites} sites");
+            Log("=====================================================");
 
             return start;
         }
@@ -988,11 +1023,68 @@ namespace SharePoint.Modernization.Scanner.Core
             {
                 var currentColor = Console.ForegroundColor;
                 Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.WriteLine($"Scanner version {this.NewVersion} is available. You're currently running {this.CurrentVersion}.");
-                Console.WriteLine($"Download the latest version of the scanner from {VersionCheck.newVersionDownloadUrl}");
+                Log($"Scanner version {this.NewVersion} is available. You're currently running {this.CurrentVersion}.");
+                Log($"Download the latest version of the scanner from {VersionCheck.newVersionDownloadUrl}");
                 Console.ForegroundColor = currentColor;
             }
         }
+
+        protected string GetRealmFromTargetUrl(Uri targetApplicationUri)
+        {
+
+            var realmFromCache = this.Store.Get<string>(this.StoreOptions.GetKey($"{keyRealm}|{targetApplicationUri.DnsSafeHost}"));
+            if (realmFromCache != null)
+            {
+                return realmFromCache;
+            }
+
+            WebRequest request = WebRequest.Create(targetApplicationUri + "/_vti_bin/client.svc");
+            request.Headers.Add("Authorization: Bearer ");
+
+            try
+            {
+                using (request.GetResponse())
+                {
+                }
+            }
+            catch (WebException e)
+            {
+                if (e.Response == null)
+                {
+                    return null;
+                }
+
+                string bearerResponseHeader = e.Response.Headers["WWW-Authenticate"];
+                if (string.IsNullOrEmpty(bearerResponseHeader))
+                {
+                    return null;
+                }
+
+                const string bearer = "Bearer realm=\"";
+                int bearerIndex = bearerResponseHeader.IndexOf(bearer, StringComparison.Ordinal);
+                if (bearerIndex < 0)
+                {
+                    return null;
+                }
+
+                int realmIndex = bearerIndex + bearer.Length;
+
+                if (bearerResponseHeader.Length >= realmIndex + 36)
+                {
+                    string targetRealm = bearerResponseHeader.Substring(realmIndex, 36);
+
+                    Guid realmGuid;
+
+                    if (Guid.TryParse(targetRealm, out realmGuid))
+                    {
+                        this.Store.Set<string>(this.StoreOptions.GetKey($"{keyRealm}|{targetApplicationUri.DnsSafeHost}"), targetRealm, this.StoreOptions.EntryOptions);
+                        return targetRealm;
+                    }
+                }
+            }
+            return null;
+        }
+
         #endregion
 
     }

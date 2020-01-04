@@ -1,6 +1,7 @@
 ﻿using SharePoint.Modernization.Scanner.Core;
 using SharePoint.Modernization.Scanner.Core.Reports;
 using SharePoint.Modernization.Scanner.Core.Telemetry;
+using SharePointPnP.Modernization.Scanner.Core;
 using SharePointPnP.Modernization.Scanner.Core.Reports;
 using System;
 using System.Collections.Generic;
@@ -148,12 +149,14 @@ namespace SharePoint.Modernization.Scanner
                     string workingFolder = Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), DateTime.Now.Ticks.ToString());
 
                     //Instantiate scan job
-                    ModernizationScanJob job = new ModernizationScanJob(options)
+                    ModernizationScanJob job = new ModernizationScanJob(options, null, null)
                     {
 
                         // I'm debugging
                         //UseThreading = false
                     };
+
+                    job.Logger += Job_Logger;
 
                     scannerTelemetry = job.ScannerTelemetry;
 
@@ -265,6 +268,18 @@ namespace SharePoint.Modernization.Scanner
                     }
                 }
             }            
+        }
+
+        private static void Job_Logger(object sender, EventArgs e)
+        {
+            if ((e as LogEventArgs).Severity == LogSeverity.Error)
+            {
+                Console.WriteLine($"[Error] {(e as LogEventArgs).Message}");
+            }
+            else
+            {
+                Console.WriteLine((e as LogEventArgs).Message);
+            }
         }
 
         private static void ClearReportStreams(List<ReportStream> reportStreams)

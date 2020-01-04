@@ -1,5 +1,6 @@
 ﻿using Microsoft.SharePoint.Client;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using SharePointPnP.Modernization.Framework.Cache;
 using SharePointPnP.Modernization.Framework.Publishing;
 using SharePointPnP.Modernization.Framework.Telemetry.Observers;
 

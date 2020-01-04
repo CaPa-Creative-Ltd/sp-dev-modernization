@@ -179,7 +179,8 @@ namespace SharePointPnP.Modernization.Framework.Publishing
                 LogInfo($"{targetClientContext.Web.GetUrl()}", LogStrings.Heading_Summary, LogEntrySignificance.TargetSiteUrl);
 
                 // Need to add further validation for target template
-                if (targetClientContext.Web.WebTemplate != "SITEPAGEPUBLISHING" && targetClientContext.Web.WebTemplate != "STS" && targetClientContext.Web.WebTemplate != "GROUP")
+                if (targetClientContext.Web.WebTemplate != "SITEPAGEPUBLISHING" && targetClientContext.Web.WebTemplate != "STS" && 
+                    targetClientContext.Web.WebTemplate != "GROUP" && targetClientContext.Web.WebTemplate != "BDR" && targetClientContext.Web.WebTemplate != "DEV")
                 {
 
                     LogError(LogStrings.Error_CrossSiteTransferTargetsNonModernSite);
@@ -260,6 +261,12 @@ namespace SharePointPnP.Modernization.Framework.Publishing
 
                         if (!string.IsNullOrEmpty(publishingPageTransformationInformation.TargetPageFolder))
                         {
+                            // Handle special case <root> to indicate page should be created in the root folder
+                            if (publishingPageTransformationInformation.TargetPageFolder.Equals("<root>", StringComparison.InvariantCultureIgnoreCase))
+                            {
+                                publishingPageTransformationInformation.TargetPageFolder = "";
+                            }
+
                             if (publishingPageTransformationInformation.TargetPageFolderOverridesDefaultFolder)
                             {
                                 pageFolder = publishingPageTransformationInformation.TargetPageFolder;
@@ -631,6 +638,15 @@ namespace SharePointPnP.Modernization.Framework.Publishing
             }
 
             return string.Empty;
+        }
+
+        /// <summary>
+        /// Loads the default page layout mapping model file
+        /// </summary>
+        /// <returns></returns>
+        public static string LoadDefaultPageLayoutMappingFile()
+        {
+            return LoadFile("SharePointPnP.Modernization.Framework.Publishing.pagelayoutmapping.xml");
         }
 
         #region Helper methods

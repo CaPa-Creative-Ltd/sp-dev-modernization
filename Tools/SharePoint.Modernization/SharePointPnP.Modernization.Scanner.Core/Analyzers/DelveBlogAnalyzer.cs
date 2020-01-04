@@ -2,16 +2,17 @@
 using SharePoint.Modernization.Scanner.Core;
 using SharePoint.Modernization.Scanner.Core.Analyzers;
 using SharePoint.Modernization.Scanner.Core.Results;
+using SharePointPnP.Modernization.Framework.Cache;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SharePointPnP.Modernization.Scanner.Core.Analyzers
 {
     public class DelveBlogAnalyzer: BaseAnalyzer
     {
+
+        public readonly string keyDelveSitesList = "DelveSitesList";
+
         #region Construction
         /// <summary>
         /// Delve Blog analyzer construction
@@ -46,9 +47,24 @@ namespace SharePointPnP.Modernization.Scanner.Core.Analyzers
             Uri rootSite = new Uri(this.SiteCollectionUrl);
             string pathFilter = $"{rootSite.Scheme}://{rootSite.DnsSafeHost}/portals/personal/*";
 
-            Dictionary<string, BlogWebScanResult> tempWebResults = new Dictionary<string, BlogWebScanResult>();            
+            Dictionary<string, BlogWebScanResult> tempWebResults = new Dictionary<string, BlogWebScanResult>();
 
-            var results = this.ScanJob.Search(cc.Web, $"path:{pathFilter} AND ContentTypeId:\"0x010100DA3A7E6E3DB34DFF8FDEDE1F4EBAF95D*\"", propertiesToRetrieve);
+            // try get the delve search results from cache as they're always the same when used in a distributed scan scenario
+            List<Dictionary<string, string>> results;
+            var delveSitesList = this.ScanJob.Store.Get<List<Dictionary<string, string>>>(this.ScanJob.StoreOptions.GetKey(keyDelveSitesList));
+            if (delveSitesList != null)
+            {
+                results = new List<Dictionary<string, string>>();
+                results.AddRange(delveSitesList);
+            }
+            else
+            {
+                results = this.ScanJob.Search(cc.Web, $"path:{pathFilter} AND ContentTypeId:\"0x010100DA3A7E6E3DB34DFF8FDEDE1F4EBAF95D*\"", propertiesToRetrieve);
+                if (results != null)
+                {
+                    this.ScanJob.Store.Set<List<Dictionary<string, string>>>(this.ScanJob.StoreOptions.GetKey(keyDelveSitesList), results, this.ScanJob.StoreOptions.EntryOptions);
+                }
+            }
 
             if (results != null && results.Count > 0)
             {

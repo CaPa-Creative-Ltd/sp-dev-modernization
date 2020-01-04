@@ -294,7 +294,8 @@ namespace SharePointPnP.Modernization.Framework.Transform
 
                 // Need to add further validation for target template
                 if (hasTargetContext &&
-                   (targetClientContext.Web.WebTemplate != "SITEPAGEPUBLISHING" && targetClientContext.Web.WebTemplate != "STS" && targetClientContext.Web.WebTemplate != "GROUP"))
+                   (targetClientContext.Web.WebTemplate != "SITEPAGEPUBLISHING" && targetClientContext.Web.WebTemplate != "STS" && 
+                    targetClientContext.Web.WebTemplate != "GROUP" && targetClientContext.Web.WebTemplate != "BDR" && targetClientContext.Web.WebTemplate != "DEV"))
                 {
 
                     LogError(LogStrings.Error_CrossSiteTransferTargetsNonModernSite);
@@ -399,6 +400,12 @@ namespace SharePointPnP.Modernization.Framework.Transform
                     {
                         if (!string.IsNullOrEmpty(pageTransformationInformation.TargetPageFolder))
                         {
+                            // Handle special case <root> to indicate page should be created in the root folder
+                            if (pageTransformationInformation.TargetPageFolder.Equals("<root>", StringComparison.InvariantCultureIgnoreCase))
+                            {
+                                pageTransformationInformation.TargetPageFolder = "";
+                            }
+
                             if (pageTransformationInformation.TargetPageFolderOverridesDefaultFolder)
                             {
                                 pageFolder = pageTransformationInformation.TargetPageFolder;

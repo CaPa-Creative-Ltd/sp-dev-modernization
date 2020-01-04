@@ -78,6 +78,15 @@ namespace SharePointPnP.Modernization.Framework.Transform
             if (!string.IsNullOrEmpty(sourceAssetRelativeUrl) && isValid)
             {
 
+                // Are we dealing with an _layouts image?
+                if (sourceAssetRelativeUrl.ContainsIgnoringCasing("_layouts/", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    // _layouts based images automatically exist on the target site, so let's build a server relative url for the _layout image on the target site
+                    var targetRelativeSiteUrl = this._targetClientContext.Web.EnsureProperty(p => p.ServerRelativeUrl);
+
+                    return $"{targetRelativeSiteUrl}/{sourceAssetRelativeUrl.Substring(sourceAssetRelativeUrl.IndexOf("_layouts/", StringComparison.InvariantCultureIgnoreCase))}";
+                }
+
                 // Check the target library exists
                 string targetFolderServerRelativeUrl = EnsureDestination(pageFileName);
                 // Read in a preferred location
@@ -412,10 +421,11 @@ namespace SharePointPnP.Modernization.Framework.Transform
             // Using the Cache Manager store the asset transfer references
             // If update - treat the source URL as unique, if multiple web parts reference to this, then it will still refer to the single resource
             var cache = Cache.CacheManager.Instance;
-            if (!cache.AssetsTransfered.Any(asset =>
+                    
+            if (!cache.GetAssetsTransferred().Any(asset =>
                  string.Equals(asset.TargetAssetTransferredUrl, assetTransferredEntity.TargetAssetFolderUrl, StringComparison.InvariantCultureIgnoreCase)))
             {
-                cache.AssetsTransfered.Add(assetTransferredEntity);
+                cache.AddAssetTransferredEntity(assetTransferredEntity);
             }
 
         }
@@ -430,7 +440,7 @@ namespace SharePointPnP.Modernization.Framework.Transform
                 // Using the Cache Manager retrieve asset transfer references (all)
                 var cache = Cache.CacheManager.Instance;
 
-                var result = cache.AssetsTransfered.SingleOrDefault(
+                var result = cache.GetAssetsTransferred().SingleOrDefault(
                     asset => string.Equals(asset.TargetAssetFolderUrl, assetTransferredEntity.TargetAssetFolderUrl, StringComparison.InvariantCultureIgnoreCase) &&
                     string.Equals(asset.SourceAssetUrl, assetTransferredEntity.SourceAssetUrl, StringComparison.InvariantCultureIgnoreCase));
 

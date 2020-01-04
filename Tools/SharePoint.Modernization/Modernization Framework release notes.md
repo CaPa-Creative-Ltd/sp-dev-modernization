@@ -16,6 +16,20 @@
 
 ### Added
 
+### Changed
+
+- Fix: Improved v3 (e.g. XSLTListView) web part handling for SP2010 - now webpart properties, zoneId and controlId are correct loaded #384
+- Fix: Correctly handle images hosted in the server side _layouts folder when doing cross site transformations #390
+- Fix: Allow to force a page to be created in the root of the SitePages library by setting `TargetPageFolder = "<root>"` and `TargetPageFolderOverridesDefaultFolder = true`
+- Bumped to .Net 4.6.1 as minimal .Net runtime version
+- Caching now uses IDistributedCache as cache store model, allowing efficient caching in distributed systems
+- The default webpartmapping.xml file is available as embedded resource
+- Target site can be a developer site (DEV web template) or document center (BDR web template) #400
+
+## [December release - version 1.0.1912.0]
+
+### Added
+
 - Added support for transforming Delve blog pages
 - Added TargetPageFolderOverridesDefaultFolder option to have the provided target folder override the default generated folder #366
 - SharePoint Add-In part properties can now be used in web part mappings #374
