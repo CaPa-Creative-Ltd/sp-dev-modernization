@@ -1,15 +1,13 @@
 import * as React from 'react';
 import * as ReactDom from 'react-dom';
 import { Version, EnvironmentType, Environment } from '@microsoft/sp-core-library';
-import {
-  BaseClientSideWebPart,
-  IPropertyPaneConfiguration,
-  PropertyPaneTextField
-} from '@microsoft/sp-webpart-base';
+import { BaseClientSideWebPart } from '@microsoft/sp-webpart-base';
+import { IPropertyPaneConfiguration, PropertyPaneTextField } from "@microsoft/sp-property-pane";
 
 import * as strings from 'PageDesignerWebPartStrings';
 import PageDesigner from '../../components/pageDesignerPanel/PageDesignerPanel';
 import { IPageDesignerPanelProps } from '../../components/pageDesignerPanel/IPageDesignerPanelProps';
+
 
 export interface IPageDesignerWebPartProps {
   description: string;
